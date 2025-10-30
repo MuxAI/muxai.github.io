@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mux Skywatch - Live Flight Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        :root {
+            --bg: #0b0c10;
+            --panel: #1f2833;
+            --accent: #66fcf1;
+            --accent2: #45a29e;
+            --text: #c5c6c7;
+            --font: 'Outfit', sans-serif;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--font);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        h1 {
+            color: var(--accent);
+            letter-spacing: 1px;
+            text-shadow: 0 0 8px var(--accent2);
+            margin: 20px 0;
+            text-align: center;
+        }
+        #map {
+            width: 90%;
+            max-width: 1100px;
+            height: 500px;
+            background: #000;
+            border: 2px solid var(--accent);
+            border-radius: 10px;
+            box-shadow: 0 0 25px rgba(102,252,241,0.2);
+            margin-bottom: 30px;
+        }
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 16px;
+            width: 90%;
+            max-width: 1100px;
+            margin-bottom: 40px;
+        }
+        .panel {
+            background: var(--panel);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+            border: 1px solid #222;
+        }
+        .panel h2 {
+            margin: 0 0 10px;
+            color: var(--accent);
+            font-size: 1.1rem;
+        }
+        label {
+            font-size: 0.9rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        input[type="range"] {
+            width: 150px;
+            accent-color: var(--accent2);
+        }
+        select, button, input[type="text"] {
+            background: #111;
+            color: var(--accent);
+            border: 1px solid var(--accent2);
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-family: var(--font);
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        input[type="text"] {
+            cursor: text;
+        }
+        button:hover {
+            background: var(--accent2);
+            color: #000;
+        }
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            padding: 4px 0;
+            border-bottom: 1px solid #333;
+        }
+        .info-item:last-child {
+            border-bottom: none;
+        }
+        .value {
+            color: var(--accent);
+            font-family: monospace;
+        }
+        .status {
+            text-align: center;
+            padding: 10px;
+            background: rgba(102, 252, 241, 0.1);
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+        footer {
+            margin-top: auto;
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            font-size: 0.8rem;
+            width: 100%;
+        }
+        @media(max-width:700px){
+            #map { height: 300px; }
+        }
+        .leaflet-popup-content {
+            font-family: var(--font);
+            color: var(--text);
+            background: var(--panel);
+        }
+        .leaflet-popup-tip {
+            background: var(--panel);
+        }
+        .aircraft-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transform-origin: center center;
+        }
+        .aircraft-icon {
+            color: #00bfff;
+            filter: drop-shadow(0 0 2px #00bfff);
+        }
+        .aircraft-wrapper.selected .aircraft-icon {
+            filter: drop-shadow(0 0 10px #66fcf1) drop-shadow(0 0 20px #66fcf1);
+        }
+    </style>
+</head>
+<body>
+    <h1>Mux Skywatch</h1>
+    <p style="text-align: center; max-width: 800px; opacity: 0.8;">Track live flights in real-time using open ADS-B data.</p>
+
+    <div id="map"></div>
+
+    <div class="controls">
+        <!-- Flight Stats Panel -->
+        <div class="panel">
+            <h2>✈️ Live Stats</h2>
+            <div class="info-item">
+                <span>Total Aircraft</span>
+                <span class="value" id="totalAircraft">0</span>
+            </div>
+            <div class="info-item">
+                <span>Last Update</span>
+                <span class="value" id="lastUpdate">-</span>
+            </div>
+            <div class="info-item">
+                <span>Data Source</span>
+                <span class="value">OpenSky Network</span>
+            </div>
+            <div class="status" id="status">Loading flights...</div>
+        </div>
+
+        <!-- Search Panel -->
+        <div class="panel">
+            <h2>🔍 Search Flight</h2>
+            <input id="searchInput" type="text" placeholder="Enter ICAO24 (e.g., A7E3A4)">
+            <button id="searchBtn">Search</button>
+            <div id="searchResult" class="status" style="display: none;"></div>
+        </div>
+
+        <!-- Controls Panel -->
+        <div class="panel">
+            <h2>🎛️ Controls</h2>
+            <button id="refreshBtn">Refresh Now</button>
+            <label>
+                Update Interval (s)
+                <input type="range" id="intervalSlider" min="1" max="300" value="10" step="30">
+                <span id="intervalValue">10</span>
+            </label>
+            <div class="info-item">
+                <span>Zoom Level</span>
+                <span class="value" id="zoomLevel">5</span>
+            </div>
+        </div>
+
+        <!-- Selected Flight Panel -->
+        <div class="panel" id="selectedPanel" style="display: none;">
+            <h2>📋 Selected Flight</h2>
+            <div id="selectedDetails"></div>
+        </div>
+    </div>
+
+    <footer>
+        © Mux Broadcast Tools 2025
+    </footer>
+
+    <script>
+        // Initialize Map
+        const map = L.map('map');
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Aircraft markers layer
+        const aircraftLayer = L.layerGroup().addTo(map);
+        let markers = [];
+        let updateInterval = 10000; // X sec default
+        let selectedIcao = null;
+
+        // Aircraft SVG
+        const aircraftSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M22 16.21v-1.895L14 8V4a2 2 0 0 0-4 0v4.105L2 14.42v1.789l8-2.81V18l-3 2v2l5-2l5 2v-2l-3-2v-4.685z"/></svg>`;
+
+        // Populate details
+        function populateDetails(state) {
+            const callsign = state[1]?.replace(/\s+/g, '') || 'Unknown';
+            const origin = state[2] || 'N/A';
+            const lon = state[5]?.toFixed(4) || 'N/A';
+            const lat = state[6]?.toFixed(4) || 'N/A';
+            const alt = state[7] ? Math.round(state[7] * 3.28084) + ' ft' : 'N/A';
+            const vel = state[9] ? Math.round(state[9]) + ' kts' : 'N/A';
+            const track = state[10] ? Math.round(state[10]) + '°' : 'N/A';
+            const last = new Date(state[4] * 1000).toLocaleString();
+
+            document.getElementById('selectedDetails').innerHTML = `
+                <div class="info-item"><span>Callsign:</span><span class="value">${callsign}</span></div>
+                <div class="info-item"><span>Origin:</span><span class="value">${origin}</span></div>
+                <div class="info-item"><span>Position:</span><span class="value">${lat}, ${lon}</span></div>
+                <div class="info-item"><span>Altitude:</span><span class="value">${alt}</span></div>
+                <div class="info-item"><span>Speed:</span><span class="value">${vel}</span></div>
+                <div class="info-item"><span>Heading:</span><span class="value">${track}</span></div>
+                <div class="info-item"><span>Last Update:</span><span class="value">${last}</span></div>
+            `;
+        }
+
+        // Fetch and update flights
+        async function updateFlights() {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = 'Fetching data...';
+            try {
+                // Get current map bounds for bbox query
+                const bounds = map.getBounds();
+                const params = new URLSearchParams({
+                    lamin: bounds.getSouth(),
+                    lomin: bounds.getWest(),
+                    lamax: bounds.getNorth(),
+                    lomax: bounds.getEast()
+                });
+                const response = await fetch(`https://opensky-network.org/api/states/all?${params}`);
+                if (!response.ok) throw new Error('API request failed');
+                const data = await response.json();
+                const states = data.states || [];
+
+                // Clear old markers
+                markers.forEach(marker => map.removeLayer(marker));
+                markers = [];
+
+                let trackedCount = 0;
+                // Add new markers
+                states.forEach(state => {
+                    const [icao24, callsign, origin, timePosition, lastContact, longitude, latitude, baroAltitude, onGround, velocity, trueTrack, verticalRate, sensors, geoAltitude, squawk, spi, positionSource, category] = state;
+                    if (latitude && longitude && !onGround) {
+                        const heading = trueTrack ? Math.round(trueTrack) : 0;
+                        const isSelected = icao24 === selectedIcao;
+                        const iconHtml = `<div class="aircraft-wrapper ${isSelected ? 'selected' : ''}" style="transform: rotate(${heading}deg);"><div class="aircraft-icon">${aircraftSvg}</div></div>`;
+                        const marker = L.marker([latitude, longitude], { 
+                            icon: L.divIcon({
+                                className: '',
+                                html: iconHtml,
+                                iconSize: [24, 24],
+                                iconAnchor: [12, 12],
+                                popupAnchor: [0, -12]
+                            })
+                        }).addTo(aircraftLayer);
+                        marker.myState = state; // Store state for click
+                        const altFt = baroAltitude ? Math.round(baroAltitude * 3.28084) : 'N/A';
+                        const speedKts = velocity ? Math.round(velocity) : 'N/A';
+                        const headingDeg = trueTrack ? Math.round(trueTrack) : 'N/A';
+                        marker.bindPopup(`
+                            <div style="font-family: var(--font); color: var(--text);">
+                                <h3 style="color: var(--accent); margin: 0 0 5px;">${callsign || 'Unknown'}</h3>
+                                <p><strong>ICAO:</strong> ${icao24}</p>
+                                <p><strong>Altitude:</strong> ${altFt} ft</p>
+                                <p><strong>Speed:</strong> ${speedKts} kts</p>
+                                <p><strong>Heading:</strong> ${headingDeg}°</p>
+                                <p><strong>Last Seen:</strong> ${new Date(lastContact * 1000).toLocaleTimeString()}</p>
+                            </div>
+                        `);
+                        marker.on('click', (e) => {
+                            const clickedState = e.target.myState;
+                            selectedIcao = clickedState[0];
+                            populateDetails(clickedState);
+                            document.getElementById('selectedPanel').style.display = 'flex';
+                            map.setView([clickedState[6], clickedState[5]], 12);
+                        });
+                        markers.push(marker);
+                        trackedCount++;
+                    }
+                });
+
+                // Update selected details if applicable
+                const selectedState = states.find(s => s[0] === selectedIcao);
+                if (selectedState) {
+                    populateDetails(selectedState);
+                    document.getElementById('selectedPanel').style.display = 'flex';
+                } else if (selectedIcao) {
+                    document.getElementById('selectedPanel').style.display = 'none';
+                    selectedIcao = null;
+                }
+
+                // Update stats
+                document.getElementById('totalAircraft').textContent = trackedCount;
+                document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+                statusEl.textContent = `${trackedCount} aircraft tracked.`;
+            } catch (error) {
+                statusEl.textContent = 'Error fetching data. Check connection.';
+                console.error('Flight update error:', error);
+            }
+        }
+
+        // Search function
+        document.getElementById('searchBtn').addEventListener('click', async () => {
+            const icao = document.getElementById('searchInput').value.trim().toUpperCase();
+            const resultEl = document.getElementById('searchResult');
+            if (!icao) {
+                resultEl.textContent = 'Enter ICAO24.';
+                resultEl.style.display = 'block';
+                return;
+            }
+            resultEl.style.display = 'block';
+            resultEl.textContent = 'Searching...';
+            try {
+                const params = new URLSearchParams({ icao24: icao });
+                const response = await fetch(`https://opensky-network.org/api/states/all?${params}`);
+                if (!response.ok) throw new Error('API request failed');
+                const data = await response.json();
+                if (data.states && data.states.length > 0) {
+                    const state = data.states[0];
+                    if (state[6] && state[5]) { // lat, lon
+                        selectedIcao = icao;
+                        populateDetails(state);
+                        document.getElementById('selectedPanel').style.display = 'flex';
+                        map.setView([state[6], state[5]], 12);
+                        updateFlights(); // Refresh to add marker
+                        resultEl.textContent = `Found ${state[1]?.replace(/\s+/g, '') || 'flight'}. Centered on map.`;
+                    } else {
+                        resultEl.textContent = 'Flight found but position unknown.';
+                    }
+                } else {
+                    resultEl.textContent = 'Flight not found.';
+                    selectedIcao = null;
+                    document.getElementById('selectedPanel').style.display = 'none';
+                }
+            } catch (error) {
+                resultEl.textContent = 'Search error.';
+                console.error('Search error:', error);
+            }
+        });
+
+        // Event Listeners
+        document.getElementById('refreshBtn').addEventListener('click', updateFlights);
+
+        const intervalSlider = document.getElementById('intervalSlider');
+        const intervalValue = document.getElementById('intervalValue');
+        intervalSlider.addEventListener('input', (e) => {
+            updateInterval = parseInt(e.target.value) * 1000;
+            intervalValue.textContent = e.target.value;
+            clearInterval(autoUpdate);
+            autoUpdate = setInterval(updateFlights, updateInterval);
+        });
+
+        map.on('zoomend moveend', () => {
+            document.getElementById('zoomLevel').textContent = map.getZoom();
+        });
+
+        // Auto-update
+        let autoUpdate = setInterval(updateFlights, updateInterval);
+
+        // Initial load with geolocation
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                map.setView([pos.coords.latitude, pos.coords.longitude], 8);
+                updateFlights();
+            },
+            () => {
+                map.setView([20, 0], 2); // Global fallback
+                updateFlights();
+            }
+        );
+
+        // Resize map on window resize
+        window.addEventListener('resize', () => {
+            map.invalidateSize();
+        });
+    </script>
+</body>
+</html>

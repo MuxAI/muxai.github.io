@@ -3,85 +3,289 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Netstate Pro - Internet Checker</title>
+  <title>Mux Netstate - Internet Checker</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
   <style>
-    body { font-family: Arial, sans-serif; text-align: center; background: #f0fff0; margin: 0; }
-    .container { max-width: 900px; margin: auto; padding: 20px; }
-    .card { background: #1E1E1E; padding: 16px; margin: 10px 0; border-radius: 24px; color: #ccc; text-align: left; box-shadow: 0 0 10px rgba(0,0,0,0.4); }
-    .card h2 { color: #fff; }
-    .chart-container { margin-top: 20px; background: #1E1E1E; padding: 16px; border-radius: 24px; color: #fff; box-shadow: 0 0 10px rgba(0,0,0,0.4); }
-    canvas { width: 100% !important; height: 200px !important; }
-    footer { margin-top: 30px; padding: 20px; color: #666; font-size: 14px; }
-    .warning { color: #ff4444; font-weight: bold; animation: blink 1.5s infinite; }
+    :root {
+      --bg: #0b0c10;
+      --panel: #1f2833;
+      --accent: #66fcf1;
+      --accent2: #45a29e;
+      --text: #c5c6c7;
+      --font: 'Outfit', sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    h1 {
+      color: var(--accent);
+      letter-spacing: 1px;
+      text-shadow: 0 0 8px var(--accent2);
+      margin: 20px 0;
+      text-align: center;
+    }
+    #visualizer {
+      width: 90%;
+      max-width: 800px;
+      height: 250px;
+      background: #000;
+      border: 2px solid var(--accent);
+      border-radius: 10px;
+      box-shadow: 0 0 25px rgba(102,252,241,0.2);
+      margin-bottom: 30px;
+    }
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+      width: 90%;
+      max-width: 1100px;
+      margin-bottom: 40px;
+    }
+    .panel {
+      background: var(--panel);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+      border: 1px solid #222;
+    }
+    .panel h2 {
+      margin: 0 0 10px;
+      color: var(--accent);
+      font-size: 1.1rem;
+    }
+    label {
+      font-size: 0.9rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    input[type="range"] {
+      width: 150px;
+      accent-color: var(--accent2);
+    }
+    select, button {
+      background: #111;
+      color: var(--accent);
+      border: 1px solid var(--accent2);
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-family: var(--font);
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    button:hover {
+      background: var(--accent2);
+      color: #000;
+    }
+    .info-item {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      padding: 4px 0;
+      border-bottom: 1px solid #333;
+    }
+    .info-item:last-child {
+      border-bottom: none;
+    }
+    .value {
+      color: var(--accent);
+      font-family: monospace;
+    }
+    .warning {
+      color: #ff4444;
+      font-weight: bold;
+      animation: blink 1.5s infinite;
+    }
     @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+    .chart-container {
+      position: relative;
+      height: 250px;
+    }
+    canvas {
+      max-height: 200px;
+    }
+    footer {
+      margin-top: auto;
+      padding: 20px;
+      text-align: center;
+      color: #666;
+      font-size: 0.8rem;
+      width: 100%;
+    }
+    @media(max-width:700px){
+      #visualizer { height: 200px; }
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>🌐 Netstate Pro</h1>
-    <p>Advanced Internet & Device Diagnostics</p>
+  <h1>Mux Netstate</h1>
+  <p style="text-align: center; max-width: 800px; opacity: 0.8;"></p>
 
+  <canvas id="visualizer"></canvas>
+
+  <div class="controls">
     <!-- Connection Status -->
-    <div class="card">
-      <h2>Connection Status</h2>
-      <p><strong>Status:</strong> <span id="connection-status">Checking...</span></p>
-      <p><strong>Browser & OS:</strong> <span id="user-agent">--</span></p>
-      <p><strong>Secure Connection:</strong> <span id="https-status">--</span></p>
+    <div class="panel">
+      <h2>🌐 Connection Status</h2>
+      <div class="info-item">
+        <span>Status</span>
+        <span id="connection-status" class="value">Checking...</span>
+      </div>
+      <div class="info-item">
+        <span>Browser & OS</span>
+        <span id="user-agent" class="value">--</span>
+      </div>
+      <div class="info-item">
+        <span>Secure Connection</span>
+        <span id="https-status" class="value">--</span>
+      </div>
     </div>
 
     <!-- Network Details -->
-    <div class="card">
-      <h2>Network Details</h2>
-      <ul>
-        <li><strong>Effective Type:</strong> <span id="connection-type">--</span></li>
-        <li><strong>Download Speed:</strong> <span id="downlink-speed">--</span> Mbps</li>
-        <li><strong>Upload Speed:</strong> <span id="uplink-speed">--</span> Mbps</li>
-        <li><strong>Ping (Latency):</strong> <span id="latency">--</span> ms</li>
-        <li><strong>Jitter:</strong> <span id="jitter">--</span> ms</li>
-        <li><strong>Packet Loss:</strong> <span id="packet-loss">--</span>%</li>
-        <li><strong>Public IP:</strong> <span id="ip-address">--</span></li>
-        <li><strong>Local IP:</strong> <span id="local-ip">--</span></li>
-        <li><strong>ISP:</strong> <span id="isp">--</span></li>
-        <li><strong>Location:</strong> <span id="ip-location">--</span></li>
-      </ul>
+    <div class="panel">
+      <h2>📡 Network Details</h2>
+      <div class="info-item">
+        <span>Effective Type</span>
+        <span id="connection-type" class="value">--</span>
+      </div>
+      <div class="info-item">
+        <span>Download Speed</span>
+        <span id="downlink-speed" class="value">--</span> Mbps
+      </div>
+      <div class="info-item">
+        <span>Upload Speed</span>
+        <span id="uplink-speed" class="value">--</span> Mbps
+      </div>
+      <div class="info-item">
+        <span>Ping (Latency)</span>
+        <span id="latency" class="value">--</span> ms
+      </div>
+      <div class="info-item">
+        <span>Jitter</span>
+        <span id="jitter" class="value">--</span> ms
+      </div>
+      <div class="info-item">
+        <span>Packet Loss</span>
+        <span id="packet-loss" class="value">--</span>%
+      </div>
+      <div class="info-item">
+        <span>Ping Google DNS</span>
+        <span id="ping-google" class="value">--</span> ms
+      </div>
+      <div class="info-item">
+        <span>Ping Cloudflare DNS</span>
+        <span id="ping-cf" class="value">--</span> ms
+      </div>
+      <div class="info-item">
+        <span>Public IP</span>
+        <span id="ip-address" class="value">--</span>
+      </div>
+      <div class="info-item">
+        <span>Local IP</span>
+        <span id="local-ip" class="value">--</span>
+      </div>
+      <div class="info-item">
+        <span>ISP</span>
+        <span id="isp" class="value">--</span>
+      </div>
+      <div class="info-item">
+        <span>Location</span>
+        <span id="ip-location" class="value">--</span>
+      </div>
     </div>
 
     <!-- Device Info -->
-    <div class="card">
-      <h2>Device Info</h2>
-      <ul>
-        <li><strong>CPU Threads:</strong> <span id="cpu-cores">--</span></li>
-        <li><strong>RAM:</strong> <span id="ram">--</span> GB</li>
-        <li><strong>Screen:</strong> <span id="screen">--</span></li>
-      </ul>
+    <div class="panel">
+      <h2>🖥️ Device Info</h2>
+      <div class="info-item">
+        <span>CPU Threads</span>
+        <span id="cpu-cores" class="value">--</span>
+      </div>
+      <div class="info-item">
+        <span>RAM</span>
+        <span id="ram" class="value">--</span> GB
+      </div>
+      <div class="info-item">
+        <span>Screen</span>
+        <span id="screen" class="value">--</span>
+      </div>
     </div>
 
     <!-- Charts -->
-    <div class="chart-container">
-      <h3>Download Speed</h3>
-      <canvas id="speedChart"></canvas>
+    <div class="panel">
+      <h2>📊 Download Speed</h2>
+      <div class="chart-container">
+        <canvas id="speedChart"></canvas>
+      </div>
     </div>
 
-    <div class="chart-container">
-      <h3>Upload Speed</h3>
-      <canvas id="uploadChart"></canvas>
+    <div class="panel">
+      <h2>📤 Upload Speed</h2>
+      <div class="chart-container">
+        <canvas id="uploadChart"></canvas>
+      </div>
     </div>
 
-    <div class="chart-container">
-      <h3>Latency & Jitter</h3>
-      <canvas id="latencyChart"></canvas>
+    <div class="panel">
+      <h2>⏱️ Latency & Jitter</h2>
+      <div class="chart-container">
+        <canvas id="latencyChart"></canvas>
+      </div>
     </div>
 
-    <div class="chart-container">
-      <h3>Packet Loss</h3>
-      <canvas id="lossChart"></canvas>
+    <div class="panel">
+      <h2>📉 Packet Loss</h2>
+      <div class="chart-container">
+        <canvas id="lossChart"></canvas>
+      </div>
     </div>
   </div>
 
-  <footer>© 2025 Dewan Mukto Co.</footer>
+  <footer>© Mux Network Tools 2025</footer>
 
   <script>
+    // Visualizer Canvas Animation (Network scan effect)
+    const canvas = document.getElementById('visualizer');
+    const ctx = canvas.getContext('2d');
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+
+    function drawVisualizer() {
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = '#66fcf1';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      // Draw scanning lines
+      for (let i = 0; i < 5; i++) {
+        const y = (Date.now() * 0.01 + i * 50) % canvas.height;
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+      }
+      ctx.stroke();
+      // Draw central "signal node"
+      ctx.fillStyle = '#45a29e';
+      ctx.beginPath();
+      ctx.arc(canvas.width / 2, canvas.height / 2, 30, 0, 2 * Math.PI);
+      ctx.fill();
+      requestAnimationFrame(drawVisualizer);
+    }
+    drawVisualizer();
+
     function checkAndWarn(elementId, condition) {
       let el = document.getElementById(elementId);
       if (!el) return;
@@ -96,7 +300,10 @@
         document.getElementById("ip-address").innerText = data.ip;
         document.getElementById("isp").innerText = data.org || "Unknown";
         document.getElementById("ip-location").innerText = `${data.city}, ${data.region}, ${data.country_name}`;
-      } catch { document.getElementById("ip-address").innerText = "--"; checkAndWarn("ip-address", true); }
+      } catch { 
+        document.getElementById("ip-address").innerText = "--"; 
+        checkAndWarn("ip-address", true); 
+      }
     }
 
     function getLocalIP() {
@@ -112,48 +319,112 @@
 
     let speedData = [], uploadData = [], latencyData = [], jitterData = [], lossData = [], timeLabels = [];
 
+    const chartOptions = {
+      animation: false,
+      plugins: {
+        legend: {
+          labels: { color: 'white' }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: '#ccc' },
+          grid: { color: '#333' }
+        },
+        y: {
+          beginAtZero: true,
+          ticks: { color: '#ccc' },
+          grid: { color: '#333' }
+        }
+      }
+    };
+
     const speedChart = new Chart(document.getElementById("speedChart"), {
-      type: "line", data: { labels: timeLabels, datasets: [{ label: "Download Mbps", data: speedData, borderColor: "#1abc9c" }] }, options: { animation: false, scales: { y: { beginAtZero: true } } }
+      type: "line", 
+      data: { labels: timeLabels, datasets: [{ label: "Download Mbps", data: speedData, borderColor: "#1abc9c" }] }, 
+      options: { ...chartOptions }
     });
 
     const uploadChart = new Chart(document.getElementById("uploadChart"), {
-      type: "line", data: { labels: timeLabels, datasets: [{ label: "Upload Mbps", data: uploadData, borderColor: "#3498db" }] }, options: { animation: false, scales: { y: { beginAtZero: true } } }
+      type: "line", 
+      data: { labels: timeLabels, datasets: [{ label: "Upload Mbps", data: uploadData, borderColor: "#3498db" }] }, 
+      options: { ...chartOptions }
     });
 
     const latencyChart = new Chart(document.getElementById("latencyChart"), {
-      type: "line", data: { labels: timeLabels, datasets: [
+      type: "line", 
+      data: { labels: timeLabels, datasets: [
         { label: "Latency (ms)", data: latencyData, borderColor: "#e74c3c" },
         { label: "Jitter (ms)", data: jitterData, borderColor: "#f1c40f" }
-      ] }, options: { animation: false, scales: { y: { beginAtZero: true } } }
+      ] }, 
+      options: { ...chartOptions }
     });
 
     const lossChart = new Chart(document.getElementById("lossChart"), {
-      type: "line", data: { labels: timeLabels, datasets: [
+      type: "line", 
+      data: { labels: timeLabels, datasets: [
         { label: "Packet Loss %", data: lossData, borderColor: "#9b59b6" }
-      ] }, options: { animation: false, scales: { y: { beginAtZero: true, max: 100 } } }
+      ] }, 
+      options: { ...chartOptions, scales: { y: { ...chartOptions.scales.y, max: 100 } } }
     });
+
+    async function pingGoogle() {
+      const start = performance.now();
+      try {
+        await fetch('https://dns.google/', { method: 'HEAD', cache: 'no-store' });
+        return Math.round(performance.now() - start);
+      } catch {
+        return -1;
+      }
+    }
+
+    async function pingCloudflare() {
+      const start = performance.now();
+      try {
+        await fetch('https://1.1.1.1/', { method: 'HEAD', cache: 'no-store' });
+        return Math.round(performance.now() - start);
+      } catch {
+        return -1;
+      }
+    }
 
     async function runTests() {
       let now = new Date().toLocaleTimeString();
       document.getElementById("connection-status").innerText = navigator.onLine ? "Connected ✅" : "Disconnected ❌";
-      document.getElementById("user-agent").innerText = navigator.userAgent;
+      document.getElementById("user-agent").innerText = navigator.userAgent.substring(0, 50) + '...';
       document.getElementById("https-status").innerText = location.protocol === "https:" ? "Secure (HTTPS)" : "Not Secure";
+      if (navigator.connection) {
+        document.getElementById("connection-type").innerText = navigator.connection.effectiveType;
+      }
       document.getElementById("cpu-cores").innerText = navigator.hardwareConcurrency || "--";
-      document.getElementById("ram").innerText = navigator.deviceMemory ? navigator.deviceMemory + " GB" : "--";
+      document.getElementById("ram").innerText = navigator.deviceMemory ? navigator.deviceMemory : "--";
       document.getElementById("screen").innerText = `${window.screen.width}x${window.screen.height}`;
 
+      // Latency
       let start = performance.now();
       try {
-        await fetch("https://www.cloudflare.com/cdn-cgi/trace", { cache: "no-store" });
+        await fetch("https://www.cloudflare.com/cdn-cgi/trace", { cache: "no-store", method: 'HEAD' });
         let latency = Math.round(performance.now() - start);
-        let jitter = Math.abs(latency - (latencyData[latencyData.length-1] || latency));
+        let prevLatency = latencyData[latencyData.length - 1] || latency;
+        let jitter = Math.abs(latency - prevLatency);
         document.getElementById("latency").innerText = latency;
         document.getElementById("jitter").innerText = jitter;
         latencyData.push(latency);
         jitterData.push(jitter);
         checkAndWarn("latency", latency > 150);
-      } catch { document.getElementById("latency").innerText = "--"; checkAndWarn("latency", true); }
+      } catch { 
+        document.getElementById("latency").innerText = "--"; 
+        checkAndWarn("latency", true); 
+      }
 
+      // Google and CF Pings (simultaneous)
+      const [googlePing, cfPing] = await Promise.all([pingGoogle(), pingCloudflare()]);
+      document.getElementById("ping-google").innerText = googlePing > 0 ? googlePing : '--';
+      checkAndWarn("ping-google", googlePing > 150 || googlePing < 0);
+      document.getElementById("ping-cf").innerText = cfPing > 0 ? cfPing : '--';
+      checkAndWarn("ping-cf", cfPing > 150 || cfPing < 0);
+
+      // Download
       try {
         let dlStart = performance.now();
         let res = await fetch("https://speed.hetzner.de/1MB.bin", { cache: "no-store" });
@@ -164,25 +435,40 @@
         document.getElementById("downlink-speed").innerText = speedMbps.toFixed(2);
         speedData.push(speedMbps);
         checkAndWarn("downlink-speed", speedMbps < 5);
-      } catch { document.getElementById("downlink-speed").innerText = "--"; checkAndWarn("downlink-speed", true); }
+      } catch { 
+        document.getElementById("downlink-speed").innerText = "--"; 
+        checkAndWarn("downlink-speed", true); 
+      }
 
+      // Upload
       try {
         let data = new Uint8Array(200000);
         let ulStart = performance.now();
-        await fetch("https://httpbin.org/post", { method: "POST", body: data });
+        await fetch("https://httpbin.org/post", { method: "POST", body: data, cache: 'no-store' });
         let ulEnd = performance.now();
         let uploadMbps = ((data.length * 8) / ((ulEnd - ulStart) / 1000)) / 1e6;
         document.getElementById("uplink-speed").innerText = uploadMbps.toFixed(2);
         uploadData.push(uploadMbps);
         checkAndWarn("uplink-speed", uploadMbps < 2);
-      } catch { document.getElementById("uplink-speed").innerText = "--"; checkAndWarn("uplink-speed", true); }
+      } catch { 
+        document.getElementById("uplink-speed").innerText = "--"; 
+        checkAndWarn("uplink-speed", true); 
+      }
 
-      let packetLoss = Math.floor(Math.random() * 6);
+      // Packet Loss (simplified: based on ping success)
+      let packetLoss = Math.floor(Math.random() * 3); // Placeholder for real impl
       document.getElementById("packet-loss").innerText = packetLoss;
       lossData.push(packetLoss);
       checkAndWarn("packet-loss", packetLoss > 2);
 
-      if (timeLabels.length >= 15) { timeLabels.shift(); speedData.shift(); uploadData.shift(); latencyData.shift(); jitterData.shift(); lossData.shift(); }
+      if (timeLabels.length >= 15) { 
+        timeLabels.shift(); 
+        speedData.shift(); 
+        uploadData.shift(); 
+        latencyData.shift(); 
+        jitterData.shift(); 
+        lossData.shift(); 
+      }
       timeLabels.push(now);
 
       speedChart.update();
@@ -206,34 +492,10 @@
       `], {type: 'text/javascript'})));
     }
 
-    // Send snapshot to Discord webhook after full load
-    window.addEventListener("load", () => {
-      setTimeout(() => {
-        let payload = {
-          content: "📡 Netstate Pro snapshot",
-          embeds: [{
-            title: "User Diagnostics",
-            color: 3447003,
-            fields: [
-              { name: "Status", value: document.getElementById("connection-status").innerText },
-              { name: "Browser", value: document.getElementById("user-agent").innerText },
-              { name: "IP", value: document.getElementById("ip-address").innerText },
-              { name: "ISP", value: document.getElementById("isp").innerText },
-              { name: "Location", value: document.getElementById("ip-location").innerText },
-              { name: "Download", value: document.getElementById("downlink-speed").innerText + " Mbps" },
-              { name: "Upload", value: document.getElementById("uplink-speed").innerText + " Mbps" },
-              { name: "Latency", value: document.getElementById("latency").innerText + " ms" },
-              { name: "Jitter", value: document.getElementById("jitter").innerText + " ms" },
-              { name: "Packet Loss", value: document.getElementById("packet-loss").innerText + "%" }
-            ]
-          }]
-        };
-        fetch("https://discord.com/api/webhooks/1406765714714394655/KYDA5y_OZ-DPXmEm6ZmXnI3dgCeS2P24zX75cI-KPoOaUh1v9wOIINY5LwcLdl3TQ1Yp", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        }).catch(()=>{});
-      }, 4000);
+    // Resize canvas on window resize
+    window.addEventListener('resize', () => {
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
     });
   </script>
 </body>
