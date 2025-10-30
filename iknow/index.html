@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mux iKnow - Browser Device Info Awareness</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0b0c10;
+            --panel: #1f2833;
+            --accent: #66fcf1;
+            --accent2: #45a29e;
+            --text: #c5c6c7;
+            --font: 'Outfit', sans-serif;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--font);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        h1 {
+            color: var(--accent);
+            letter-spacing: 1px;
+            text-shadow: 0 0 8px var(--accent2);
+            margin: 20px 0;
+            text-align: center;
+        }
+        #visualizer {
+            width: 90%;
+            max-width: 800px;
+            height: 250px;
+            background: #000;
+            border: 2px solid var(--accent);
+            border-radius: 10px;
+            box-shadow: 0 0 25px rgba(102,252,241,0.2);
+            margin-bottom: 30px;
+        }
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 16px;
+            width: 90%;
+            max-width: 1100px;
+            margin-bottom: 40px;
+        }
+        .panel {
+            background: var(--panel);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+            border: 1px solid #222;
+        }
+        .panel h2 {
+            margin: 0 0 10px;
+            color: var(--accent);
+            font-size: 1.1rem;
+        }
+        label {
+            font-size: 0.9rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        input[type="range"] {
+            width: 150px;
+            accent-color: var(--accent2);
+        }
+        select, button {
+            background: #111;
+            color: var(--accent);
+            border: 1px solid var(--accent2);
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-family: var(--font);
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        button:hover {
+            background: var(--accent2);
+            color: #000;
+        }
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            padding: 4px 0;
+            border-bottom: 1px solid #333;
+        }
+        .info-item:last-child {
+            border-bottom: none;
+        }
+        .value {
+            color: var(--accent);
+            font-family: monospace;
+        }
+        .warning {
+            background: rgba(102, 252, 241, 0.1);
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            text-align: center;
+            margin-top: 10px;
+        }
+        footer {
+            margin-top: auto;
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            font-size: 0.8rem;
+            width: 100%;
+        }
+        @media(max-width:700px){
+            #visualizer { height: 200px; }
+        }
+    </style>
+</head>
+<body>
+    <h1>Mux iKnow</h1>
+    <p style="text-align: center; max-width: 800px; opacity: 0.8;">Awareness is the first step to privacy.</p>
+
+    <canvas id="visualizer"></canvas>
+
+    <div class="controls">
+        <!-- Hardware Panel -->
+        <div class="panel">
+            <h2>🖥️ Hardware Info</h2>
+            <div class="info-item">
+                <span>Screen Resolution</span>
+                <span class="value" id="screenRes">-</span>
+            </div>
+            <div class="info-item">
+                <span>Viewport Size</span>
+                <span class="value" id="viewportSize">-</span>
+            </div>
+            <div class="info-item">
+                <span>CPU Cores</span>
+                <span class="value" id="cpuCores">-</span>
+            </div>
+            <div class="info-item">
+                <span>Device Memory (GB)</span>
+                <span class="value" id="deviceMemory">-</span>
+            </div>
+            <div class="info-item">
+                <span>Pixel Depth</span>
+                <span class="value" id="pixelDepth">-</span>
+            </div>
+        </div>
+
+        <!-- Software Panel -->
+        <div class="panel">
+            <h2>💻 Software Info</h2>
+            <div class="info-item">
+                <span>User Agent</span>
+                <span class="value" id="userAgent">-</span>
+            </div>
+            <div class="info-item">
+                <span>Platform</span>
+                <span class="value" id="platform">-</span>
+            </div>
+            <div class="info-item">
+                <span>Language</span>
+                <span class="value" id="language">-</span>
+            </div>
+            <div class="info-item">
+                <span>Timezone</span>
+                <span class="value" id="timezone">-</span>
+            </div>
+            <div class="info-item">
+                <span>Cookies Enabled</span>
+                <span class="value" id="cookiesEnabled">-</span>
+            </div>
+        </div>
+
+        <!-- Network Panel -->
+        <div class="panel">
+            <h2>🌐 Network & Location</h2>
+            <button id="getLocation">Get Location (Permission Required)</button>
+            <div class="info-item">
+                <span>IP Address (Approximate)</span>
+                <span class="value" id="ipAddress">-</span>
+            </div>
+            <div class="info-item">
+                <span>Connection Type</span>
+                <span class="value" id="connectionType">-</span>
+            </div>
+            <div class="info-item">
+                <span>Downlink Speed (Mbps)</span>
+                <span class="value" id="downlinkSpeed">-</span>
+            </div>
+            <div class="info-item">
+                <span>RTT (ms)</span>
+                <span class="value" id="rtt">-</span>
+            </div>
+            <div id="locationInfo" style="display: none;">
+                <div class="info-item">
+                    <span>Latitude</span>
+                    <span class="value" id="lat">-</span>
+                </div>
+                <div class="info-item">
+                    <span>Longitude</span>
+                    <span class="value" id="lon">-</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fingerprinting Panel -->
+        <div class="panel">
+            <h2>🕵️ Fingerprinting</h2>
+            <button id="generateFingerprint">Generate Canvas Fingerprint</button>
+            <div class="info-item">
+                <span>Canvas Hash</span>
+                <span class="value" id="canvasHash">-</span>
+            </div>
+            <div class="info-item">
+                <span>WebGL Vendor</span>
+                <span class="value" id="webglVendor">-</span>
+            </div>
+            <div class="info-item">
+                <span>WebGL Renderer</span>
+                <span class="value" id="webglRenderer">-</span>
+            </div>
+            <div class="warning">
+                Fingerprints can uniquely identify you across sites without cookies.
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        © Mux Internet Tools 2025
+    </footer>
+
+    <script>
+        // Visualizer Canvas Animation (Simple device "scan" effect)
+        const canvas = document.getElementById('visualizer');
+        const ctx = canvas.getContext('2d');
+        canvas.width = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+
+        function drawVisualizer() {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = '#66fcf1';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            // Draw scanning lines
+            for (let i = 0; i < 5; i++) {
+                const y = (Date.now() * 0.01 + i * 50) % canvas.height;
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+            }
+            ctx.stroke();
+            // Draw central "data node"
+            ctx.fillStyle = '#45a29e';
+            ctx.beginPath();
+            ctx.arc(canvas.width / 2, canvas.height / 2, 30, 0, 2 * Math.PI);
+            ctx.fill();
+            requestAnimationFrame(drawVisualizer);
+        }
+        drawVisualizer();
+
+        // Update Hardware Info
+        function updateHardware() {
+            document.getElementById('screenRes').textContent = `${screen.width}x${screen.height}`;
+            document.getElementById('viewportSize').textContent = `${window.innerWidth}x${window.innerHeight}`;
+            document.getElementById('cpuCores').textContent = navigator.hardwareConcurrency || 'Unknown';
+            document.getElementById('deviceMemory').textContent = navigator.deviceMemory ? `${navigator.deviceMemory} GB` : 'Unknown';
+            document.getElementById('pixelDepth').textContent = screen.pixelDepth + '-bit';
+        }
+
+        // Update Software Info
+        function updateSoftware() {
+            document.getElementById('userAgent').textContent = navigator.userAgent.substring(0, 50) + '...';
+            document.getElementById('platform').textContent = navigator.platform;
+            document.getElementById('language').textContent = navigator.language;
+            document.getElementById('timezone').textContent = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            document.getElementById('cookiesEnabled').textContent = navigator.cookieEnabled ? 'Yes' : 'No';
+        }
+
+        // Update Network Info
+        function updateNetwork() {
+            if ('connection' in navigator) {
+                const conn = navigator.connection;
+                document.getElementById('connectionType').textContent = conn.effectiveType || 'Unknown';
+                document.getElementById('downlinkSpeed').textContent = conn.downlink ? `${conn.downlink} Mbps` : 'Unknown';
+                document.getElementById('rtt').textContent = conn.rtt || 'Unknown';
+            } else {
+                document.getElementById('connectionType').textContent = 'API Not Supported';
+                document.getElementById('downlinkSpeed').textContent = 'API Not Supported';
+                document.getElementById('rtt').textContent = 'API Not Supported';
+            }
+            // Approximate IP via WebRTC (common technique)
+            const pc = new RTCPeerConnection({ iceServers: [] });
+            pc.createDataChannel('');
+            pc.createOffer().then(pc.setLocalDescription.bind(pc));
+            pc.onicecandidate = (ice) => {
+                if (ice.candidate) {
+                    const ipMatch = /([0-9]{1,3}(\.[0-9]{1,3}){3})/.exec(ice.candidate.candidate);
+                    if (ipMatch) document.getElementById('ipAddress').textContent = ipMatch[1];
+                }
+                pc.onicecandidate = null;
+            };
+        }
+
+        // Location
+        document.getElementById('getLocation').addEventListener('click', () => {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition((pos) => {
+                    document.getElementById('lat').textContent = pos.coords.latitude;
+                    document.getElementById('lon').textContent = pos.coords.longitude;
+                    document.getElementById('locationInfo').style.display = 'block';
+                }, () => {
+                    alert('Location access denied.');
+                });
+            } else {
+                alert('Geolocation not supported.');
+            }
+        });
+
+        // Canvas Fingerprint
+        document.getElementById('generateFingerprint').addEventListener('click', () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.textBaseline = 'top';
+            ctx.font = '14px Arial';
+            ctx.fillText('Browser fingerprint test', 2, 2);
+            const hash = btoa(canvas.toDataURL()).substring(0, 16);
+            document.getElementById('canvasHash').textContent = hash;
+        });
+
+        // WebGL Info
+        function updateWebGL() {
+            const canvas = document.createElement('canvas');
+            const gl = canvas.getContext('webgl');
+            if (gl) {
+                const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+                document.getElementById('webglVendor').textContent = debugInfo ? gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) : 'Unknown';
+                document.getElementById('webglRenderer').textContent = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : 'Unknown';
+            } else {
+                document.getElementById('webglVendor').textContent = 'Not Supported';
+                document.getElementById('webglRenderer').textContent = 'Not Supported';
+            }
+        }
+
+        // Initial Load
+        updateHardware();
+        updateSoftware();
+        updateNetwork();
+        updateWebGL();
+
+        // Refresh on Resize
+        window.addEventListener('resize', updateHardware);
+    </script>
+</body>
+</html>
