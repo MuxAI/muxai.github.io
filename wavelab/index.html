@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>WaveLab — Web Synth & Visualizer</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0b0c10;
+  --panel: #1f2833;
+  --accent: #66fcf1;
+  --accent2: #45a29e;
+  --text: #c5c6c7;
+  --font: 'Outfit', sans-serif;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+h1 {
+  color: var(--accent);
+  letter-spacing: 1px;
+  text-shadow: 0 0 8px var(--accent2);
+  margin: 20px 0;
+  text-align: center;
+}
+#visualizer {
+  width: 90%;
+  max-width: 800px;
+  height: 250px;
+  background: #000;
+  border: 2px solid var(--accent);
+  border-radius: 10px;
+  box-shadow: 0 0 25px rgba(102,252,241,0.2);
+  margin-bottom: 30px;
+}
+.controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  width: 90%;
+  max-width: 1100px;
+  margin-bottom: 40px;
+}
+.panel {
+  background: var(--panel);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+  border: 1px solid #222;
+}
+.panel h2 {
+  margin: 0 0 10px;
+  color: var(--accent);
+  font-size: 1.1rem;
+}
+label {
+  font-size: 0.9rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.range-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+input[type="range"] {
+  width: 100px;
+  accent-color: var(--accent2);
+}
+input[type="number"] {
+  width: 60px;
+  background: #111;
+  color: var(--accent);
+  border: 1px solid var(--accent2);
+  border-radius: 6px;
+  padding: 3px 5px;
+  font-family: var(--font);
+}
+select, button {
+  background: #111;
+  color: var(--accent);
+  border: 1px solid var(--accent2);
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: 0.2s;
+}
+button:hover {
+  background: var(--accent2);
+  color: #000;
+}
+footer {
+  margin: 20px 0;
+  font-size: 0.9rem;
+  color: var(--text);
+  opacity: 0.7;
+}
+@media(max-width:700px){
+  #visualizer { height: 200px; }
+}
+</style>
+</head>
+<body>
+  <h1>Mux WaveLab</h1>
+  <canvas id="visualizer"></canvas>
+  
+  <div class="controls">
+    <div class="panel">
+      <h2>Oscillator</h2>
+      <label>Waveform:
+        <select id="waveform">
+          <option value="sine">Sine</option>
+          <option value="square">Square</option>
+          <option value="sawtooth">Sawtooth</option>
+          <option value="triangle">Triangle</option>
+        </select>
+      </label>
+      <label>Frequency:
+        <div class="range-group">
+          <input type="range" id="freq" min="5" max="25000" value="440">
+          <input type="number" id="freqNum" min="50" max="2000" value="440">
+          <span id="freqVal">Hz</span>
+        </div>
+      </label>
+      <label>Detune:
+        <div class="range-group">
+          <input type="range" id="detune" min="-1200" max="1200" value="0">
+          <input type="number" id="detuneNum" min="-1200" max="1200" value="0">
+          <span id="detuneVal">¢</span>
+        </div>
+      </label>
+    </div>
+
+    <div class="panel">
+      <h2>Gain</h2>
+      <label>Volume:
+        <div class="range-group">
+          <input type="range" id="gain" min="0" max="1" step="0.01" value="0.5">
+          <input type="number" id="gainNum" min="0" max="1" step="0.01" value="0.5">
+        </div>
+      </label>
+      <button id="play">Play</button>
+      <button id="stop">Stop</button>
+      <button id="exportBtn">Export</button>
+      <button id="importBtn">Import</button>
+      <input type="file" id="fileInput" accept=".muxwl" style="display:none;">
+    </div>
+
+    <div class="panel">
+      <h2>Envelope</h2>
+      <label>Attack:
+        <div class="range-group">
+          <input type="range" id="attack" min="0" max="2" step="0.01" value="0.1">
+          <input type="number" id="attackNum" min="0" max="2" step="0.01" value="0.1">
+          <span>s</span>
+        </div>
+      </label>
+      <label>Decay:
+        <div class="range-group">
+          <input type="range" id="decay" min="0" max="2" step="0.01" value="0.3">
+          <input type="number" id="decayNum" min="0" max="2" step="0.01" value="0.3">
+          <span>s</span>
+        </div>
+      </label>
+      <label>Sustain:
+        <div class="range-group">
+          <input type="range" id="sustain" min="0" max="1" step="0.01" value="0.7">
+          <input type="number" id="sustainNum" min="0" max="1" step="0.01" value="0.7">
+        </div>
+      </label>
+      <label>Release:
+        <div class="range-group">
+          <input type="range" id="release" min="0" max="2" step="0.01" value="0.4">
+          <input type="number" id="releaseNum" min="0" max="2" step="0.01" value="0.4">
+          <span>s</span>
+        </div>
+      </label>
+    </div>
+
+    <div class="panel">
+      <h2>Filter</h2>
+      <label>Type:
+        <select id="filterType">
+          <option value="lowpass">Lowpass</option>
+          <option value="highpass">Highpass</option>
+          <option value="bandpass">Bandpass</option>
+        </select>
+      </label>
+      <label>Cutoff:
+        <div class="range-group">
+          <input type="range" id="cutoff" min="100" max="20000" value="5000">
+          <input type="number" id="cutoffNum" min="100" max="20000" value="5000">
+          <span>Hz</span>
+        </div>
+      </label>
+      <label>Q:
+        <div class="range-group">
+          <input type="range" id="q" min="0.1" max="20" step="0.1" value="1">
+          <input type="number" id="qNum" min="0.1" max="20" step="0.1" value="1">
+        </div>
+      </label>
+    </div>
+  </div>
+
+  <footer>© Mux Audio Tools 2025</footer>
+
+<script>
+const ctx = new (window.AudioContext || window.webkitAudioContext)();
+let osc, gainNode, filter, analyser, dataArray, bufferLength, rafId;
+
+// Setup audio graph
+function createGraph() {
+  osc = ctx.createOscillator();
+  gainNode = ctx.createGain();
+  filter = ctx.createBiquadFilter();
+  analyser = ctx.createAnalyser();
+  analyser.fftSize = 2048;
+  bufferLength = analyser.frequencyBinCount;
+  dataArray = new Uint8Array(bufferLength);
+  osc.connect(filter);
+  filter.connect(gainNode);
+  gainNode.connect(analyser);
+  analyser.connect(ctx.destination);
+}
+
+// Envelope logic
+function triggerEnvelope() {
+  const now = ctx.currentTime;
+  const A = parseFloat(attack.value);
+  const D = parseFloat(decay.value);
+  const S = parseFloat(sustain.value);
+  gainNode.gain.cancelScheduledValues(now);
+  gainNode.gain.setValueAtTime(0, now);
+  gainNode.gain.linearRampToValueAtTime(parseFloat(gain.value), now + A);
+  gainNode.gain.linearRampToValueAtTime(S * parseFloat(gain.value), now + A + D);
+}
+
+function releaseEnvelope() {
+  if (!osc) return;
+  const now = ctx.currentTime;
+  const R = parseFloat(release.value);
+  gainNode.gain.cancelScheduledValues(now);
+  gainNode.gain.setValueAtTime(gainNode.gain.value, now);
+  gainNode.gain.linearRampToValueAtTime(0, now + R);
+  setTimeout(()=>{
+    try { osc.stop(); } catch {}
+    osc.disconnect();
+    cancelAnimationFrame(rafId);
+  }, R*1000+50);
+}
+
+// Play/Stop
+play.onclick = () => {
+  ctx.resume();
+  createGraph();
+  osc.type = waveform.value;
+  osc.frequency.value = parseFloat(freq.value);
+  osc.detune.value = parseFloat(detune.value);
+  filter.type = filterType.value;
+  filter.frequency.value = parseFloat(cutoff.value);
+  filter.Q.value = parseFloat(q.value);
+  triggerEnvelope();
+  osc.start();
+  visualize();
+};
+stop.onclick = () => releaseEnvelope();
+
+// Sync range + number inputs
+function linkInputs(id) {
+  const range = document.getElementById(id);
+  const num = document.getElementById(id + "Num");
+  if(!range || !num) return;
+  range.addEventListener("input", ()=>{ num.value = range.value; updateAudioParam(id, range.value); });
+  num.addEventListener("input", ()=>{ range.value = num.value; updateAudioParam(id, num.value); });
+}
+["freq","detune","gain","attack","decay","sustain","release","cutoff","q"].forEach(linkInputs);
+
+function updateAudioParam(id, val){
+  if(id==='freq' && osc) osc.frequency.value = parseFloat(val);
+  if(id==='detune' && osc) osc.detune.value = parseFloat(val);
+  if(id==='gain' && gainNode) gainNode.gain.value = parseFloat(val);
+  if(id==='cutoff' && filter) filter.frequency.value = parseFloat(val);
+  if(id==='q' && filter) filter.Q.value = parseFloat(val);
+}
+
+// Export / Import
+exportBtn.onclick = () => {
+  const config = {
+    waveform: waveform.value,
+    freq: freq.value,
+    detune: detune.value,
+    gain: gain.value,
+    attack: attack.value,
+    decay: decay.value,
+    sustain: sustain.value,
+    release: release.value,
+    filterType: filterType.value,
+    cutoff: cutoff.value,
+    q: q.value
+  };
+  const blob = new Blob([JSON.stringify(config)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "wavelab-config.muxwl";
+  a.click();
+  URL.revokeObjectURL(url);
+};
+importBtn.onclick = ()=> fileInput.click();
+fileInput.onchange = e=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    const config = JSON.parse(reader.result);
+    for(const [k,v] of Object.entries(config)){
+      const el = document.getElementById(k);
+      const num = document.getElementById(k+"Num");
+      if(el){ el.value = v; if(num) num.value=v; }
+    }
+  };
+  reader.readAsText(file);
+};
+
+// Visualizer
+const canvas = document.getElementById('visualizer');
+const c = canvas.getContext('2d');
+function visualize() {
+  const W = canvas.width = canvas.clientWidth;
+  const H = canvas.height = canvas.clientHeight;
+  function draw() {
+    rafId = requestAnimationFrame(draw);
+    analyser.getByteTimeDomainData(dataArray);
+    c.fillStyle = "#000";
+    c.fillRect(0,0,W,H);
+    c.lineWidth = 2;
+    const grd = c.createLinearGradient(0,0,W,H);
+    grd.addColorStop(0,'#66fcf1'); grd.addColorStop(1,'#45a29e');
+    c.strokeStyle = grd;
+    c.beginPath();
+    const slice = W / bufferLength;
+    let x = 0;
+    for(let i=0;i<bufferLength;i++){
+      const v = dataArray[i]/128.0;
+      const y = v * H/2;
+      if(i===0) c.moveTo(x,y);
+      else c.lineTo(x,y);
+      x += slice;
+    }
+    c.lineTo(W,H/2);
+    c.stroke();
+  }
+  draw();
+}
+</script>
+</body>
+</html>
