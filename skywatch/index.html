@@ -5,16 +5,55 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mux Skywatch - Live Flight Tracker</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://code.iconify.design/iconify-icon/1.0.8/iconify-icon.min.js"></script>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlldEJveD0iMCAwIDI0IDI0Ij48cGF0aCBmaWxsPSIjNWU3YmZkIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGQ9Ik01Ljc5NiAxOC4yMDRMMjEuNTEyIDIuNDg4Yy0uOTg4LS45ODktMi44Ni0uMzY0LTYuNjA2Ljg4NGwtOS4zMzEgMy4xMWMtMi4wODIuNjk0LTMuMTIzIDEuMDQxLTMuNDM5IDEuODA0cS0uMTEyLjI3MS0uMTMzLjU2NGMtLjA1OS44MjQuNzE3IDEuNiAyLjI2OSAzLjE1MWwuMjgzLjI4M2MuMjU0LjI1NC4zODIuMzgyLjQ3OC41MjNjLjE5LjI4LjI5Ny42MDcuMzEuOTQ1Yy4wMDguMTcxLS4wMTkuMzUtLjA3Mi43MDVjLS4xOTYgMS4zMDQtLjI5NCAxLjk1Ni0uMTc5IDIuNDU4Yy4xMTQuNDk1LjM2Mi45MzguNzA0IDEuMjg5IiBjbGlwLXJ1bGU9ImV2ZW5vZGQiLz48cGF0aCBmaWxsPSIjNWU3YmZkIiBkPSJtMTcuNDk4IDE4LjQ4NmwzLjEzLTkuMzkyYzEuMjUtMy43NDUgMS44NzMtNS42MTcuODg1LTYuNjA2TDUuNzk3IDE4LjIwNGMuMzQ4LjM1Ni43OTQuNjE3IDEuMjk2Ljc0Yy41LjEyMiAxLjE1My4wMzMgMi40Ni0uMTQ0bC4wNzEtLjAxYy4zNjktLjA1LjU1My0uMDc1LjczLS4wNjRjLjMyLjAyLjYzLjEyNC44OTguMzAzYy4xNDcuMDk5LjI3OC4yMy41NDEuNDkzbC4yNTEuMjUxYzEuNTEgMS41MSAyLjI2NiAyLjI2NSAzLjA2NyAyLjIyNmMuMjItLjAxLjQzOC0uMDYyLjY0LS4xNTFjLjczNC0uMzIzIDEuMDcyLTEuMzM2IDEuNzQ3LTMuMzYyIiBvcGFjaXR5PSIwLjUiLz48L3N2Zz4=">
+    <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlldEJveD0iMCAwIDI0IDI0Ij48cGF0aCBmaWxsPSIjNWU3YmZkIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGQ9Ik01Ljc5NiAxOC4yMDRMMjEuNTEyIDIuNDg4Yy0uOTg4LS45ODktMi44Ni0uMzY0LTYuNjA2Ljg4NGwtOS4zMzEgMy4xMWMtMi4wODIuNjk0LTMuMTIzIDEuMDQxLTMuNDM5IDEuODA0cS0uMTEyLjI3MS0uMTMzLjU2NGMtLjA1OS44MjQuNzE3IDEuNiAyLjI2OSAzLjE1MWwuMjgzLjI4M2MuMjU0LjI1NC4zODIuMzgyLjQ3OC41MjNjLjE5LjI4LjI5Ny42MDcuMzEuOTQ1Yy4wMDguMTcxLS4wMTkuMzUtLjA3Mi43MDVjLS4xOTYgMS4zMDQtLjI5NCAxLjk1Ni0uMTc5IDIuNDU4Yy4xMTQuNDk1LjM2Mi45MzguNzA0IDEuMjg5IiBjbGlwLXJ1bGU9ImV2ZW5vZGQiLz48cGF0aCBmaWxsPSIjNWU3YmZkIiBkPSJtMTcuNDk4IDE4LjQ4NmwzLjEzLTkuMzkyYzEuMjUtMy43NDUgMS44NzMtNS42MTcuODg1LTYuNjA2TDUuNzk3IDE4LjIwNGMuMzQ4LjM1Ni43OTQuNjE3IDEuMjk2Ljc0Yy41LjEyMiAxLjE1My4wMzMgMi40Ni0uMTQ0bC4wNzEtLjAxYy4zNjktLjA1LjU1My0uMDc1LjczLS4wNjRjLjMyLjAyLjYzLjEyNC44OTguMzAzYy4xNDcuMDk5LjI3OC4yMy41NDEuNDkzbC4yNTEuMjUxYzEuNTEgMS41MSAyLjI2NiAyLjI2NSAzLjA2NyAyLjIyNmMuMjItLjAxLjQzOC0uMDYyLjY0LS4xNTFjLjczNC0uMzIzIDEuMDcyLTEuMzM2IDEuNzQ3LTMuMzYyIiBvcGFjaXR5PSIwLjUiLz48L3N2Zz4=">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         :root {
-            --bg: #0b0c10;
-            --panel: #1f2833;
-            --accent: #66fcf1;
-            --accent2: #45a29e;
-            --text: #c5c6c7;
+            --bg: #fefefe;
+            --panel: #fafafa;
+            --accent: #5e7bfd;
+            --accent2: #848ff5;
+            --text: #383838;
             --font: 'Outfit', sans-serif;
+            --track-bg: #ccc;
+            --thumb-size: 26px;
+        }
+        [data-theme="dark"] {
+            --bg: #121212;
+            --panel: #1e1e1e;
+            --text: #e0e0e0;
+            --track-bg: var(--accent);
+        }
+        [data-theme="dark"] #header {
+            background: var(--bg);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            border-bottom: 1px solid #333;
+        }
+        [data-theme="dark"] .panel {
+            background: var(--panel);
+            box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+            border: 1px solid #333;
+        }
+        [data-theme="dark"] select, [data-theme="dark"] button {
+            background: #2a2a2a;
+            color: var(--text);
+            border: 1px solid #444;
+        }
+        [data-theme="dark"] button:hover {
+            background: var(--accent2);
+            color: #000;
+        }
+        [data-theme="dark"] .info-item {
+            border-bottom: 1px solid #555;
+        }
+        [data-theme="dark"] .warning {
+            background: rgba(253, 123, 94, 0.3);
+        }
+        [data-theme="dark"] footer {
+            color: #999;
         }
         * { box-sizing: border-box; }
         body {
@@ -27,11 +66,29 @@
             align-items: center;
             min-height: 100vh;
             overflow-x: hidden;
+            padding-top: 4rem;
+        }
+        a {
+          text-decoration: none;
+          color: var(--accent);
+        }
+        #header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 2rem;
+            background: var(--bg);
+            z-index: 1000;
+            width: 100%;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-bottom: 1px solid #e0e0e0;
         }
         h1 {
             color: var(--accent);
             letter-spacing: 1px;
-            text-shadow: 0 0 8px var(--accent2);
             margin: 20px 0;
             text-align: center;
         }
@@ -60,8 +117,8 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.3);
-            border: 1px solid #222;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.13);
+            border: 1px solid #f2f2f2;
         }
         .panel h2 {
             margin: 0 0 10px;
@@ -79,7 +136,7 @@
             accent-color: var(--accent2);
         }
         select, button, input[type="text"] {
-            background: #111;
+            background: #f1f1f1;
             color: var(--accent);
             border: 1px solid var(--accent2);
             padding: 6px 10px;
@@ -112,7 +169,7 @@
         .status {
             text-align: center;
             padding: 10px;
-            background: rgba(102, 252, 241, 0.1);
+            background: rgba(253, 123, 94, 0.5);
             border-radius: 6px;
             font-size: 0.9rem;
         }
@@ -148,10 +205,54 @@
         .aircraft-wrapper.selected .aircraft-icon {
             filter: drop-shadow(0 0 10px #66fcf1) drop-shadow(0 0 20px #66fcf1);
         }
+        iconify-icon {
+          display: inline-flex;
+          align-items: center;
+          vertical-align: middle;
+        }
+        #theme-toggle {
+            width: 60px;
+            height: 34px;
+            background: var(--track-bg);
+            border-radius: 17px;
+            cursor: pointer;
+            border: none;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            box-sizing: border-box;
+            margin-left: auto;
+            transition: background-color 0.3s ease;
+        }
+        #theme-toggle iconify-icon {
+            width: var(--thumb-size);
+            height: var(--thumb-size);
+            background: white;
+            border-radius: 50%;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            flex-shrink: 0;
+        }
+        #theme-toggle[data-state="light"] iconify-icon {
+            transform: translateX(0);
+        }
+        #theme-toggle[data-state="dark"] iconify-icon {
+            transform: translateX(26px);
+        }
     </style>
 </head>
 <body>
-    <h1>Mux Skywatch</h1>
+    <div id="header">
+        <img src="https://muxai.github.io/assets/logo/favicon.png" alt="Mux Skywatch Logo" style="height: 2rem; width: 2rem; border-radius: 50%; margin-right: 0.75rem;">
+        <h1 style="margin: 0; font-size: 1rem; line-height: 1; color: var(--accent); letter-spacing: 1px;">Mux Skywatch</h1>
+        <button id="theme-toggle" data-state="light">
+            <iconify-icon icon="solar:moon-bold-duotone" style="width: 1.5em; height: 1.5em; color: var(--accent);"></iconify-icon>
+        </button>
+    </div>
     <p style="text-align: center; max-width: 800px; opacity: 0.8;">Track live flights in real-time using open ADS-B data.</p>
 
     <div id="map"></div>
@@ -159,7 +260,7 @@
     <div class="controls">
         <!-- Flight Stats Panel -->
         <div class="panel">
-            <h2>✈️ Live Stats</h2>
+            <h2><iconify-icon icon="solar:radio-bold-duotone" style="width: 1em; height: 1em; color: var(--accent); margin-right: 0.5em;"></iconify-icon>Live Stats</h2>
             <div class="info-item">
                 <span>Total Aircraft</span>
                 <span class="value" id="totalAircraft">0</span>
@@ -177,7 +278,7 @@
 
         <!-- Search Panel -->
         <div class="panel">
-            <h2>🔍 Search Flight</h2>
+            <h2><iconify-icon icon="solar:calendar-search-bold-duotone" style="width: 1em; height: 1em; color: var(--accent); margin-right: 0.5em;"></iconify-icon>Search Flight</h2>
             <input id="searchInput" type="text" placeholder="Enter ICAO24 (e.g., A7E3A4)">
             <button id="searchBtn">Search</button>
             <div id="searchResult" class="status" style="display: none;"></div>
@@ -185,7 +286,7 @@
 
         <!-- Controls Panel -->
         <div class="panel">
-            <h2>🎛️ Controls</h2>
+            <h2><iconify-icon icon="solar:settings-bold-duotone" style="width: 1em; height: 1em; color: var(--accent); margin-right: 0.5em;"></iconify-icon>Controls</h2>
             <button id="refreshBtn">Refresh Now</button>
             <label>
                 Update Interval (s)
@@ -200,7 +301,7 @@
 
         <!-- Selected Flight Panel -->
         <div class="panel" id="selectedPanel" style="display: none;">
-            <h2>📋 Selected Flight</h2>
+            <h2><iconify-icon icon="solar:file-bold-duotone" style="width: 1em; height: 1em; color: var(--accent); margin-right: 0.5em;"></iconify-icon>Selected Flight</h2>
             <div id="selectedDetails"></div>
         </div>
     </div>
@@ -210,6 +311,22 @@
     </footer>
 
     <script>
+        // Theme Toggle
+        const themeToggle = document.getElementById('theme-toggle');
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', currentTheme);
+        themeToggle.setAttribute('data-state', currentTheme);
+        const icon = themeToggle.querySelector('iconify-icon');
+        icon.setAttribute('icon', currentTheme === 'light' ? 'solar:moon-bold-duotone' : 'solar:sun-bold-duotone');
+        themeToggle.addEventListener('click', () => {
+            const current = document.documentElement.getAttribute('data-theme');
+            const nextTheme = current === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', nextTheme);
+            localStorage.setItem('theme', nextTheme);
+            themeToggle.setAttribute('data-state', nextTheme);
+            icon.setAttribute('icon', nextTheme === 'light' ? 'solar:moon-bold-duotone' : 'solar:sun-bold-duotone');
+        });
+
         // Initialize Map
         const map = L.map('map');
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
