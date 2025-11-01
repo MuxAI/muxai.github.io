@@ -79,7 +79,7 @@ function highlightMarker(marker) {
     const highlightedIcon = L.divIcon({
         className: 'leaflet-div-icon bounce',
         html: `<div style="position: relative; display: flex; justify-content: center; align-items: center; animation: bounce 1s infinite;">
-            <i class="fa-solid fa-location-pin" style="font-size: 60px; color: #FF0000; position: absolute; bottom: 0px;"></i>
+            <i class="fa-solid fa-location-pin" style="font-size: 60px; color: #5e7bfd; position: absolute; bottom: 0px;"></i>
             <div class="bus-route" style="position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); color: white; background-color: rgba(0, 0, 0, 0.8); padding: 3px 6px; border-radius: 5px; font-size: 14px; font-weight: bold;">
                 ${marker.routeNumber}
             </div>
@@ -112,7 +112,7 @@ async function updateMap() {
         const icon = L.divIcon({
             className: 'leaflet-div-icon',
             html: `<div style="position: relative; display: flex; justify-content: center; align-items: center;">
-                <i class="fa-solid fa-location-pin" style="font-size: 40px; color: #007900; position: absolute; bottom: 0px;"></i>
+                <i class="fa-solid fa-location-pin" style="font-size: 40px; color: #5e7bfd; position: absolute; bottom: 0px;"></i>
                 <div class="bus-route" style="position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); color: white; background-color: rgba(0, 0, 0, 0.07); padding: 3px 6px; border-radius: 5px; font-size: 12px; font-weight: bold;">
                     ${routeNumber}
                 </div>
@@ -194,6 +194,22 @@ function handleRefresh() {
     updateMap();
     resetTimer();
 }
+
+// Theme Toggle
+const themeToggle = document.getElementById('theme-toggle');
+const currentTheme = localStorage.getItem('theme') || 'light';
+document.documentElement.setAttribute('data-theme', currentTheme);
+themeToggle.setAttribute('data-state', currentTheme);
+const icon = themeToggle.querySelector('iconify-icon');
+icon.setAttribute('icon', currentTheme === 'light' ? 'solar:sun-bold-duotone' : 'solar:moon-bold-duotone');
+themeToggle.addEventListener('click', () => {
+    const current = document.documentElement.getAttribute('data-theme');
+    const nextTheme = current === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', nextTheme);
+    localStorage.setItem('theme', nextTheme);
+    themeToggle.setAttribute('data-state', nextTheme);
+    icon.setAttribute('icon', nextTheme === 'light' ? 'solar:sun-bold-duotone' : 'solar:moon-bold-duotone');
+});
 
 setInterval(updateLocalTime, 1000);
 setInterval(updateMap, 300000);

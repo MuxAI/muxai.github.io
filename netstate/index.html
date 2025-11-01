@@ -1,146 +1,255 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mux Netstate - Internet Checker</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg: #0b0c10;
-      --panel: #1f2833;
-      --accent: #66fcf1;
-      --accent2: #45a29e;
-      --text: #c5c6c7;
-      --font: 'Outfit', sans-serif;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--font);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
-    h1 {
-      color: var(--accent);
-      letter-spacing: 1px;
-      text-shadow: 0 0 8px var(--accent2);
-      margin: 20px 0;
-      text-align: center;
-    }
-    #visualizer {
-      width: 90%;
-      max-width: 800px;
-      height: 250px;
-      background: #000;
-      border: 2px solid var(--accent);
-      border-radius: 10px;
-      box-shadow: 0 0 25px rgba(102,252,241,0.2);
-      margin-bottom: 30px;
-    }
-    .controls {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 16px;
-      width: 90%;
-      max-width: 1100px;
-      margin-bottom: 40px;
-    }
-    .panel {
-      background: var(--panel);
-      border-radius: 12px;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.3);
-      border: 1px solid #222;
-    }
-    .panel h2 {
-      margin: 0 0 10px;
-      color: var(--accent);
-      font-size: 1.1rem;
-    }
-    label {
-      font-size: 0.9rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    input[type="range"] {
-      width: 150px;
-      accent-color: var(--accent2);
-    }
-    select, button {
-      background: #111;
-      color: var(--accent);
-      border: 1px solid var(--accent2);
-      padding: 6px 10px;
-      border-radius: 6px;
-      font-family: var(--font);
-      cursor: pointer;
-      transition: 0.2s;
-    }
-    button:hover {
-      background: var(--accent2);
-      color: #000;
-    }
-    .info-item {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.85rem;
-      padding: 4px 0;
-      border-bottom: 1px solid #333;
-    }
-    .info-item:last-child {
-      border-bottom: none;
-    }
-    .value {
-      color: var(--accent);
-      font-family: monospace;
-    }
-    .warning {
-      color: #ff4444;
-      font-weight: bold;
-      animation: blink 1.5s infinite;
-    }
-    @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
-    .chart-container {
-      position: relative;
-      height: 250px;
-    }
-    canvas {
-      max-height: 200px;
-    }
-    footer {
-      margin-top: auto;
-      padding: 20px;
-      text-align: center;
-      color: #666;
-      font-size: 0.8rem;
-      width: 100%;
-    }
-    @media(max-width:700px){
-      #visualizer { height: 200px; }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mux Netstate - Internet Checker</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBmaWxsPSIjNWU3YmZkIiBkPSJNMTMuMTA2IDIyaC0yLjIxMmMtMy40NDcgMC01LjE3IDAtNi4zNDUtMS4wMTJzLTEuNDE5LTIuNzA1LTEuOTA2LTYuMDkzbC0uMjc5LTEuOTM3Yy0uMzgtMi42MzctLjU3LTMuOTU2LS4wMjktNS4wODNzMS42OTEtMS44MTMgMy45OTItMy4xODNsMS4zODUtLjgyNUM5LjggMi42MjIgMTAuODQ2IDIgMTIgMnMyLjE5OS42MjIgNC4yODggMS44NjdsMS4zODUuODI1YzIuMyAxLjM3IDMuNDUxIDIuMDU2IDMuOTkyIDMuMTgzcy4zNSAyLjQ0Ni0uMDMgNS4wODNsLS4yNzggMS45MzdjLS40ODcgMy4zODgtLjczMSA1LjA4MS0xLjkwNiA2LjA5M1MxNi41NTMgMjIgMTMuMTA2IDIyIiBvcGFjaXR5PSIwLjUiLz48cGF0aCBmaWxsPSIjNWU3YmZkIiBkPSJNMTcuNDUgMTIuMTkyYy0zLjAxNy0zLjI1Ni03Ljg4My0zLjI1Ni0xMC45IDBhLjc1Ljc1IDAgMSAxLTEuMS0xLjAyYzMuNjEtMy44OTYgOS40OS0zLjg5NiAxMy4xIDBhLjc1Ljc1IDAgMSAxLTEuMSAxLjAyIi8+PHBhdGggZmlsbD0iIzVlN2JmZCIgZD0iTTE1LjQ1IDE0LjM1Yy0xLjkxMi0yLjA2My00Ljk4Ny0yLjA2My02LjkgMGEuNzUuNzUgMCAxIDEtMS4xLTEuMDE5YzIuNTA2LTIuNzA0IDYuNTk0LTIuNzA0IDkuMSAwYS43NS43NSAwIDAgMS0xLjEgMS4wMiIvPjxwYXRoIGZpbGw9IiM1ZTdiZmQiIGQ9Ik0xMy40NSAxNi41MWMtLjgwOC0uODcyLTIuMDkyLS44NzItMi45IDBhLjc1Ljc1IDAgMSAxLTEuMS0xLjAyYzEuNDAxLTEuNTEyIDMuNjk5LTEuNTEyIDUuMSAwYS43NS43NSAwIDAgMS0xLjEgMS4wMiIvPjwvc3ZnPg==">
+    <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBmaWxsPSIjNWU3YmZkIiBkPSJNMTMuMTA2IDIyaC0yLjIxMmMtMy40NDcgMC01LjE3IDAtNi4zNDUtMS4wMTJzLTEuNDE5LTIuNzA1LTEuOTA2LTYuMDkzbC0uMjc5LTEuOTM3Yy0uMzgtMi42MzctLjU3LTMuOTU2LS4wMjktNS4wODNzMS42OTEtMS44MTMgMy45OTItMy4xODNsMS4zODUtLjgyNUM5LjggMi42MjIgMTAuODQ2IDIgMTIgMnMyLjE5OS42MjIgNC4yODggMS44NjdsMS4zODUuODI1YzIuMyAxLjM3IDMuNDUxIDIuMDU2IDMuOTkyIDMuMTgzcy4zNSAyLjQ0Ni0uMDMgNS4wODNsLS4yNzggMS45MzdjLS40ODcgMy4zODgtLjczMSA1LjA4MS0xLjkwNiA2LjA5M1MxNi41NTMgMjIgMTMuMTA2IDIyIiBvcGFjaXR5PSIwLjUiLz48cGF0aCBmaWxsPSIjNWU3YmZkIiBkPSJNMTcuNDUgMTIuMTkyYy0zLjAxNy0zLjI1Ni03Ljg4My0zLjI1Ni0xMC45IDBhLjc1Ljc1IDAgMSAxLTEuMS0xLjAyYzMuNjEtMy44OTYgOS40OS0zLjg5NiAxMy4xIDBhLjc1Ljc1IDAgMSAxLTEuMSAxLjAyIi8+PHBhdGggZmlsbD0iIzVlN2JmZCIgZD0iTTE1LjQ1IDE0LjM1Yy0xLjkxMi0yLjA2My00Ljk4Ny0yLjA2My02LjkgMGEuNzUuNzUgMCAxIDEtMS4xLTEuMDE5YzIuNTA2LTIuNzA0IDYuNTk0LTIuNzA0IDkuMSAwYS43NS43NSAwIDAgMS0xLjEgMS4wMiIvPjxwYXRoIGZpbGw9IiM1ZTdiZmQiIGQ9Ik0xMy40NSAxNi41MWMtLjgwOC0uODcyLTIuMDkyLS44NzItMi45IDBhLjc1Ljc1IDAgMSAxLTEuMS0xLjAyYzEuNDAxLTEuNTEyIDMuNjk5LTEuNTEyIDUuMSAwYS43NS43NSAwIDAgMS0xLjEgMS4wMiIvPjwvc3ZnPg==">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://code.iconify.design/iconify-icon/1.0.8/iconify-icon.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg: #fefefe;
+            --panel: #fafafa;
+            --accent: #5e7bfd;
+            --accent2: #848ff5;
+            --text: #383838;
+            --font: 'Outfit', sans-serif;
+            --track-bg: #ccc;
+            --thumb-size: 26px;
+        }
+        [data-theme="dark"] {
+            --bg: #121212;
+            --panel: #1e1e1e;
+            --text: #e0e0e0;
+            --track-bg: var(--accent);
+        }
+        [data-theme="dark"] #header {
+            background: var(--bg);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            border-bottom: 1px solid #333;
+        }
+        [data-theme="dark"] .panel {
+            background: var(--panel);
+            box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+            border: 1px solid #333;
+        }
+        [data-theme="dark"] select, [data-theme="dark"] button {
+            background: #2a2a2a;
+            color: var(--text);
+            border: 1px solid #444;
+        }
+        [data-theme="dark"] button:hover {
+            background: var(--accent2);
+            color: #000;
+        }
+        [data-theme="dark"] .info-item {
+            border-bottom: 1px solid #555;
+        }
+        [data-theme="dark"] .warning {
+            background: rgba(253, 123, 94, 0.3);
+        }
+        [data-theme="dark"] footer {
+            color: #999;
+        }
+        [data-theme="dark"] canvas {
+            background-color: var(--panel);
+        }
+        [data-theme="dark"] .chart-container canvas {
+            color: var(--text);
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--font);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+            padding-top: 4rem;
+        }
+        a {
+          text-decoration: none;
+          color: var(--accent);
+        }
+        #header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 2rem;
+            background: var(--bg);
+            z-index: 1000;
+            width: 100%;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-bottom: 1px solid #e0e0e0;
+        }
+        h1 {
+            color: var(--accent);
+            letter-spacing: 1px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        #visualizer {
+            width: 90%;
+            max-width: 800px;
+            height: 250px;
+            background: var(--bg);
+            border: 2px solid var(--accent);
+            border-radius: 10px;
+            box-shadow: 0 0 25px rgba(102,252,241,0.2);
+            margin-bottom: 30px;
+        }
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 16px;
+            width: 90%;
+            max-width: 1100px;
+            margin-bottom: 40px;
+        }
+        .panel {
+            background: var(--panel);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.13);
+            border: 1px solid #f2f2f2;
+        }
+        .panel h2 {
+            margin: 0 0 10px;
+            color: var(--accent);
+            font-size: 1.1rem;
+        }
+        label {
+            font-size: 0.9rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        input[type="range"] {
+            width: 150px;
+            accent-color: var(--accent2);
+        }
+        select, button {
+            background: #f1f1f1;
+            color: var(--accent);
+            border: 1px solid var(--accent2);
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-family: var(--font);
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        button:hover {
+            background: var(--accent2);
+            color: #000;
+        }
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            padding: 4px 0;
+            border-bottom: 1px solid #333;
+        }
+        .info-item:last-child {
+            border-bottom: none;
+        }
+        .value {
+            color: var(--accent);
+            font-family: monospace;
+        }
+        .warning {
+            background: rgba(253, 123, 94, 0.5);
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            text-align: center;
+            margin-top: 10px;
+        }
+        footer {
+            margin-top: auto;
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            font-size: 0.8rem;
+            width: 100%;
+        }
+       iconify-icon {
+          display: inline-flex;
+          align-items: center;
+          vertical-align: middle;
+        }
+        #theme-toggle {
+            width: 60px;
+            height: 34px;
+            background: var(--track-bg);
+            border-radius: 17px;
+            cursor: pointer;
+            border: none;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            box-sizing: border-box;
+            margin-left: auto;
+            transition: background-color 0.3s ease;
+        }
+        #theme-toggle iconify-icon {
+            width: var(--thumb-size);
+            height: var(--thumb-size);
+            background: white;
+            border-radius: 50%;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            flex-shrink: 0;
+        }
+        #theme-toggle[data-state="light"] iconify-icon {
+            transform: translateX(0);
+        }
+        #theme-toggle[data-state="dark"] iconify-icon {
+            transform: translateX(26px);
+        }
+        .chart-container {
+          position: relative;
+          height: 250px;
+        }
+        canvas {
+          max-height: 200px;
+        }
+        @media(max-width:700px){
+          #visualizer { height: 200px; }
+        }
+    </style>
 </head>
 <body>
-  <h1>Mux Netstate</h1>
-  <p style="text-align: center; max-width: 800px; opacity: 0.8;"></p>
+    <div id="header">
+        <img src="https://huanmux.github.io/assets/logo/favicon.png" alt="Mux Netstate Logo" style="height: 2rem; width: 2rem; border-radius: 50%; margin-right: 0.75rem;">
+        <h1 style="margin: 0; font-size: 1rem; line-height: 1; color: var(--accent); letter-spacing: 1px;">Mux Netstate</h1>
+        <button id="theme-toggle" data-state="light">
+            <iconify-icon icon="solar:moon-bold-duotone" style="width: 1.5em; height: 1.5em; color: var(--accent);"></iconify-icon>
+        </button>
+    </div>
+    <p style="text-align: center; max-width: 800px; opacity: 0.8;">Monitor your internet connection in real-time.</p>
 
-  <canvas id="visualizer"></canvas>
+    <canvas id="visualizer"></canvas>
 
-  <div class="controls">
+    <div class="controls">
     <!-- Connection Status -->
     <div class="panel">
-      <h2>🌐 Connection Status</h2>
+      <h2><iconify-icon icon="solar:globe-bold-duotone" style="width: 1em; height: 1em; color: var(--accent); margin-right: 0.5em;"></iconify-icon>Connection Status</h2>
       <div class="info-item">
         <span>Status</span>
         <span id="connection-status" class="value">Checking...</span>
@@ -157,7 +266,7 @@
 
     <!-- Network Details -->
     <div class="panel">
-      <h2>📡 Network Details</h2>
+      <h2><iconify-icon icon="solar:wifi-bold-duotone" style="width: 1em; height: 1em; color: var(--accent); margin-right: 0.5em;"></iconify-icon>Network Details</h2>
       <div class="info-item">
         <span>Effective Type</span>
         <span id="connection-type" class="value">--</span>
@@ -210,7 +319,7 @@
 
     <!-- Device Info -->
     <div class="panel">
-      <h2>🖥️ Device Info</h2>
+      <h2><iconify-icon icon="solar:monitor-smartphone-bold-duotone" style="width: 1em; height: 1em; color: var(--accent); margin-right: 0.5em;"></iconify-icon>Device Info</h2>
       <div class="info-item">
         <span>CPU Threads</span>
         <span id="cpu-cores" class="value">--</span>
@@ -227,37 +336,56 @@
 
     <!-- Charts -->
     <div class="panel">
-      <h2>📊 Download Speed</h2>
+      <h2><iconify-icon icon="solar:chart-line-bold-duotone" style="width: 1em; height: 1em; color: var(--accent); margin-right: 0.5em;"></iconify-icon>Download Speed</h2>
       <div class="chart-container">
         <canvas id="speedChart"></canvas>
       </div>
     </div>
 
     <div class="panel">
-      <h2>📤 Upload Speed</h2>
+      <h2><iconify-icon icon="solar:arrow-up-bold-duotone" style="width: 1em; height: 1em; color: var(--accent); margin-right: 0.5em;"></iconify-icon>Upload Speed</h2>
       <div class="chart-container">
         <canvas id="uploadChart"></canvas>
       </div>
     </div>
 
     <div class="panel">
-      <h2>⏱️ Latency & Jitter</h2>
+      <h2><iconify-icon icon="solar:clock-bold-duotone" style="width: 1em; height: 1em; color: var(--accent); margin-right: 0.5em;"></iconify-icon>Latency & Jitter</h2>
       <div class="chart-container">
         <canvas id="latencyChart"></canvas>
       </div>
     </div>
 
     <div class="panel">
-      <h2>📉 Packet Loss</h2>
+      <h2><iconify-icon icon="solar:chart-decrease-bold-duotone" style="width: 1em; height: 1em; color: var(--accent); margin-right: 0.5em;"></iconify-icon>Packet Loss</h2>
       <div class="chart-container">
         <canvas id="lossChart"></canvas>
       </div>
     </div>
   </div>
 
-  <footer>© Mux Network Tools 2025</footer>
+  <footer>
+        © Mux 2025
+    </footer>
 
-  <script>
+    <script>
+
+        // Theme Toggle
+        const themeToggle = document.getElementById('theme-toggle');
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', currentTheme);
+        themeToggle.setAttribute('data-state', currentTheme);
+        const icon = themeToggle.querySelector('iconify-icon');
+        icon.setAttribute('icon', currentTheme === 'light' ? 'solar:sun-bold-duotone' : 'solar:moon-bold-duotone');
+        themeToggle.addEventListener('click', () => {
+            const current = document.documentElement.getAttribute('data-theme');
+            const nextTheme = current === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', nextTheme);
+            localStorage.setItem('theme', nextTheme);
+            themeToggle.setAttribute('data-state', nextTheme);
+            icon.setAttribute('icon', nextTheme === 'light' ? 'solar:sun-bold-duotone' : 'solar:moon-bold-duotone');
+        });
+
     // Visualizer Canvas Animation (Network scan effect)
     const canvas = document.getElementById('visualizer');
     const ctx = canvas.getContext('2d');
@@ -267,7 +395,7 @@
     function drawVisualizer() {
       ctx.fillStyle = '#000';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.strokeStyle = '#66fcf1';
+      ctx.strokeStyle = '#5e7bfd';
       ctx.lineWidth = 2;
       ctx.beginPath();
       // Draw scanning lines
@@ -278,7 +406,7 @@
       }
       ctx.stroke();
       // Draw central "signal node"
-      ctx.fillStyle = '#45a29e';
+      ctx.fillStyle = '#5e7bfd';
       ctx.beginPath();
       ctx.arc(canvas.width / 2, canvas.height / 2, 30, 0, 2 * Math.PI);
       ctx.fill();
@@ -323,17 +451,17 @@
       animation: false,
       plugins: {
         legend: {
-          labels: { color: 'white' }
+          labels: { color: 'var(--text)' }
         }
       },
       scales: {
         x: {
-          ticks: { color: '#ccc' },
+          ticks: { color: 'var(--text)' },
           grid: { color: '#333' }
         },
         y: {
           beginAtZero: true,
-          ticks: { color: '#ccc' },
+          ticks: { color: 'var(--text)' },
           grid: { color: '#333' }
         }
       }
@@ -497,6 +625,6 @@
       canvas.width = canvas.offsetWidth;
       canvas.height = canvas.offsetHeight;
     });
-  </script>
+    </script>
 </body>
 </html>

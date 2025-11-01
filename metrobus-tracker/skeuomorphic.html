@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>JackBus | Metrobus Tracker — Renovated UI</title>
+  <meta name="description" content="Track all buses of Metrobus St John's. Get live updates on current bus locations, routes, etc." />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://code.iconify.design/iconify-icon/1.0.8/iconify-icon.min.js" defer></script>
+  <style>
+    :root{
+      --bg: #fbfcff;
+      --panel: #ffffff;
+      --muted: #6b7280;
+      --accent: #5e7bfd;
+      --accent-2: #7484f8;
+      --glass: rgba(255,255,255,0.6);
+      --glass-strong: rgba(255,255,255,0.85);
+      --shadow: 0 8px 30px rgba(24,39,75,0.06);
+      --radius: 12px;
+      --max-width: 1200px;
+      font-family: 'Outfit', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+      color-scheme: light;
+    }
+    [data-theme='dark']{
+      --bg: #0f1114;
+      --panel: #111215;
+      --muted: #9aa0ab;
+      --glass: rgba(16,18,20,0.6);
+      --glass-strong: rgba(16,18,20,0.9);
+      --shadow: 0 8px 30px rgba(2,6,23,0.6);
+      color-scheme: dark;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--muted)}
+
+    /* APP LAYOUT */
+    .app{
+      max-width:var(--max-width);
+      margin:0 auto;
+      height:100vh;
+      display:grid;
+      grid-template-columns: 1fr 380px;
+      grid-template-rows: auto 1fr;
+      gap:18px;
+      padding:18px;
+    }
+
+    /* header */
+    header.app-header{
+      grid-column: 1 / -1;
+      display:flex;align-items:center;gap:12px;justify-content:space-between;
+      padding:10px 14px;background:linear-gradient(180deg, rgba(255,255,255,0.6), rgba(255,255,255,0.4));backdrop-filter:blur(6px);border-radius:12px;box-shadow:var(--shadow);
+    }
+    .brand{display:flex;align-items:center;gap:10px}
+    .brand img{width:40px;height:40px;border-radius:10px;object-fit:cover}
+    .brand h1{margin:0;font-size:1.05rem;color:var(--accent);letter-spacing:0.6px}
+    .controls{display:flex;align-items:center;gap:8px}
+    .control-btn{background:var(--panel);border:1px solid rgba(0,0,0,0.04);padding:8px 10px;border-radius:10px;display:inline-flex;align-items:center;gap:8px;cursor:pointer}
+    .search{min-width:240px;background:var(--panel);border-radius:10px;padding:6px 10px;display:flex;align-items:center;gap:8px;border:1px solid rgba(0,0,0,0.04)}
+    .search input{border:0;background:transparent;outline:none;font-size:0.95rem;color:inherit}
+
+    /* main map + sidebar */
+    .map-area{position:relative;border-radius:12px;overflow:hidden;box-shadow:var(--shadow)}
+    #map{width:100%;height:calc(100vh - 140px);min-height:420px}
+
+    aside.sidebar{
+      background:var(--panel);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:12px;box-shadow:var(--shadow);
+      height:calc(100vh - 140px);overflow:auto;
+    }
+
+    .sidebar .section{background:transparent;padding:8px;border-radius:8px}
+    .subtitle{font-size:0.85rem;color:var(--muted);font-weight:600}
+
+    .stats{display:flex;gap:8px}
+    .stat{flex:1;background:linear-gradient(180deg,var(--glass-strong),var(--glass));padding:10px;border-radius:10px;border:1px solid rgba(0,0,0,0.03);}
+    .stat h3{margin:0;font-size:1.05rem;color:var(--accent)}
+    .stat p{margin:6px 0 0;font-size:0.8rem;color:var(--muted)}
+
+    .bus-list{display:flex;flex-direction:column;gap:8px}
+    .bus-item{display:flex;align-items:center;justify-content:space-between;padding:10px;border-radius:10px;background:var(--panel);border:1px solid rgba(0,0,0,0.03);cursor:pointer}
+    .bus-item .left{display:flex;gap:10px;align-items:center}
+    .bus-chip{background:linear-gradient(90deg,var(--accent-2),var(--accent));color:#fff;padding:8px 12px;border-radius:999px;font-weight:700}
+    .bus-meta{font-size:0.85rem}
+
+    /* floating overlays (preserve original IDs for script.js compatibility) */
+    .overlays{position:absolute;right:14px;top:80px;display:flex;flex-direction:column;gap:10px;z-index:800}
+    .overlay-btn{background:var(--panel);padding:10px 12px;border-radius:10px;border:1px solid rgba(0,0,0,0.04);box-shadow:0 4px 18px rgba(2,6,23,0.06);cursor:pointer}
+    #localTimeOverlay{left:14px;right:auto;top:80px;position:absolute}
+
+    /* bottom raw data / accordion - keep original IDs */
+    .raw-toggle{position:fixed;left:50%;transform:translateX(-50%);bottom:24px;z-index:900}
+    .raw-accordion{padding:10px 16px;border-radius:10px;background:var(--panel);border:1px solid rgba(0,0,0,0.04);cursor:pointer}
+    .panel-content{position:fixed;left:50%;transform:translateX(-50%);bottom:80px;width:92%;max-width:980px;background:var(--panel);padding:16px;border-radius:12px;box-shadow:var(--shadow);display:none;max-height:34vh;overflow:auto}
+
+    /* bus numbers floating */
+    .bus-numbers{display:flex;gap:8px;flex-wrap:wrap}
+    .bus-number{padding:8px 12px;border-radius:999px;background:var(--panel);border:1px solid rgba(0,0,0,0.04);cursor:pointer}
+
+    footer.app-footer{grid-column:1 / -1;text-align:center;color:var(--muted);padding:8px}
+
+    /* small devices: single column, bottom sheet style */
+    @media (max-width: 900px){
+      .app{grid-template-columns:1fr;grid-template-rows:auto 1fr auto;gap:10px;padding:12px}
+      aside.sidebar{position:fixed;right:0;bottom:0;left:0;height:auto;max-height:58vh;border-top-left-radius:14px;border-top-right-radius:14px;padding:12px;transform:translateY(100%);transition:transform .28s cubic-bezier(.2,.9,.2,1);}
+      aside.sidebar.open{transform:translateY(0)}
+      #map{height:calc(100vh - 72px);min-height:360px}
+      header.app-header{border-radius:10px}
+      .overlays{right:12px;top:70px}
+      .raw-toggle{left:auto;right:12px;transform:none}
+      .panel-content{left:auto;right:12px;transform:none;width:calc(100% - 24px);bottom:90px}
+    }
+
+    /* accessibility focus */
+    button:focus, .control-btn:focus, .bus-item:focus{outline:3px solid rgba(94,123,253,0.18)}
+
+    /* subtle marker highlight animation (kept from original) */
+    .marker-highlight{animation:jack-bounce 1.2s infinite}
+    @keyframes jack-bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+  </style>
+</head>
+<body data-theme="light">
+  <div class="app">
+
+    <header class="app-header">
+      <div class="brand">
+        <img src="https://huanmux.github.io/assets/logo/favicon.png" alt="Mux logo" />
+        <div>
+          <h1>JackBus</h1>
+          <div style="font-size:0.78rem;color:var(--muted)">Metrobus tracker — St John's</div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <div class="search" role="search" aria-label="Search routes or bus numbers">
+          <iconify-icon icon="ic:round-search" style="width:18px;height:18px;color:var(--muted)"></iconify-icon>
+          <input id="searchInput" placeholder="Search bus, route, stop..." />
+        </div>
+
+        <button class="control-btn" id="refreshUI" title="Refresh data">
+          <iconify-icon icon="ic:round-refresh" style="width:18px;height:18px;color:var(--accent)"></iconify-icon>
+          <span style="font-weight:600;color:var(--accent)">Refresh</span>
+        </button>
+
+        <div id="theme-toggle" class="control-btn" aria-pressed="false" title="Toggle theme">
+          <iconify-icon icon="solar:moon-bold-duotone" style="width:18px;height:18px;color:var(--accent)"></iconify-icon>
+        </div>
+
+        <button class="control-btn" id="openSidebar" aria-expanded="false" title="Open sidebar">
+          <iconify-icon icon="ic:round-list" style="width:18px;height:18px;color:var(--muted)"></iconify-icon>
+        </button>
+      </div>
+    </header>
+
+    <main class="map-area" aria-live="polite">
+      <div id="map" aria-label="Map showing buses"></div>
+
+      <!-- overlays kept: IDs preserved so script.js still works -->
+      <div class="overlays">
+        <div id="refreshOverlay" class="overlay-btn">Refresh</div>
+        <div id="timerOverlay" class="overlay-btn">Updating in ...</div>
+      </div>
+
+      <div id="localTimeOverlay" class="overlay-btn">⏳ Local time</div>
+
+      <!-- raw data accordion toggle for mobile/desktop -->
+      <div class="raw-toggle">
+        <button id="rawToggleBtn" class="raw-accordion">Raw data</button>
+      </div>
+
+      <div class="panel-content" id="rawPanel">
+        <div id="rawData" aria-live="polite"></div>
+      </div>
+    </main>
+
+    <aside class="sidebar" id="sidebar">
+      <div class="section">
+        <div class="subtitle">Live overview</div>
+        <div class="stats" style="margin-top:8px">
+          <div class="stat"><h3 id="activeBuses">--</h3><p>Active buses</p></div>
+          <div class="stat"><h3 id="routesCount">--</h3><p>Routes</p></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div class="subtitle">Buses</div>
+          <div style="font-size:0.85rem;color:var(--muted)">Tap to focus</div>
+        </div>
+
+        <div class="bus-list" id="busNumbers" aria-live="polite">
+          <!-- dynamically filled by script.js. Keep id busNumbers -->
+          <!-- example structure preserved for compatibility -->
+          <!-- <div class="bus-item"><div class="left"><div class="bus-chip">12A</div><div class="bus-meta">Route 12 — 3 stops</div></div></div> -->
+        </div>
+      </div>
+
+      <div class="section" style="margin-top:auto">
+        <div class="subtitle">Legend & actions</div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button class="control-btn" id="showAll">Show all</button>
+          <button class="control-btn" id="hideAll">Hide all</button>
+        </div>
+
+        <div style="margin-top:12px;font-size:0.9rem;color:var(--muted)">
+          © Mux 2025
+        </div>
+      </div>
+    </aside>
+
+    <footer class="app-footer">JackBus — real-time Metrobus tracking • Built by Mux</footer>
+  </div>
+
+  <script>
+    // Tiny UI helpers — keeps IDs and hooks for your external script.js intact.
+    (function(){
+      const themeToggle = document.getElementById('theme-toggle');
+      const html = document.documentElement;
+      themeToggle?.addEventListener('click', ()=>{
+        const isDark = document.body.getAttribute('data-theme') === 'dark';
+        document.body.setAttribute('data-theme', isDark? 'light' : 'dark');
+        themeToggle.setAttribute('aria-pressed', (!isDark).toString());
+      });
+
+      // Sidebar open on small screens
+      const openSidebar = document.getElementById('openSidebar');
+      const sidebar = document.getElementById('sidebar');
+      openSidebar?.addEventListener('click', ()=>{
+        const open = sidebar.classList.toggle('open');
+        openSidebar.setAttribute('aria-expanded', open.toString());
+      });
+
+      // Raw data toggle
+      const rawBtn = document.getElementById('rawToggleBtn');
+      const rawPanel = document.getElementById('rawPanel');
+      rawBtn?.addEventListener('click', ()=>{
+        rawPanel.style.display = rawPanel.style.display === 'block' ? 'none' : 'block';
+      });
+
+      // Expose small API for your script.js if it needs to push UI values
+      window.JackBusUI = {
+        setActiveBuses(n){ document.getElementById('activeBuses').textContent = n },
+        setRoutes(n){ document.getElementById('routesCount').textContent = n },
+        addBusItem(html){ document.getElementById('busNumbers').insertAdjacentHTML('beforeend', html) }
+      }
+    })();
+  </script>
+
+  <!-- keep script.js external for map & live data logic -->
+  <script src="script.js" defer></script>
+</body>
+</html>
