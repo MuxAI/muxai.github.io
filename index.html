@@ -66,6 +66,9 @@
   <!-- Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400&family=Noto+Sans+SC:wght@400&family=PT+Sans:wght@400&family=Tajawal:wght@400&family=Noto+Sans+Bengali:wght@400&family=Noto+Sans+JP:wght@400&display=swap" rel="stylesheet">
 
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" crossOrigin="anonymous" referrerPolicy="no-referrer" />
+
   <!-- Styles -->
   <style>
     body {
@@ -93,7 +96,7 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.6);
+      background: rgba(0, 0, 0, 0.06);
       backdrop-filter: blur(10px);
       z-index: 2;
     }
@@ -119,6 +122,79 @@
       pointer-events: none;
       user-select: none;
     }
+
+    #social-panel {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.8);
+      border-radius: 25px;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      z-index: 5;
+      color: white;
+      font-family: "Montserrat", sans-serif;
+      font-size: 14px;
+      font-weight: 400;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      max-width: 90vw;
+    }
+
+    #social-panel span {
+      white-space: nowrap;
+      margin-right: 10px;
+    }
+
+    #social-panel a {
+      color: white;
+      text-decoration: none;
+      font-size: 1.2em;
+      transition: opacity 0.3s ease;
+      margin: 0 2px;
+    }
+
+    #social-panel a:hover {
+      opacity: 0.7;
+      color: #848ff5;
+    }
+
+    #social-panel i {
+      transition: transform 0.3s ease;
+    }
+
+    #social-panel a:hover i {
+      transform: scale(1.1);
+    }
+
+    @media (max-width: 518px) {
+      #social-panel {
+        position: fixed;
+        bottom: 20px;
+        left: 5%;
+        transform: translateX(1.5%);
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 5px;
+        padding: 8px 8px;
+        align-items: center;
+      }
+
+      #social-panel span {
+        margin-right: 0;
+        margin-bottom: 5px;
+        order: 2;
+        width: 100%;
+        text-align: center;
+      }
+
+      #social-panel a {
+        font-size: 0.8em;
+        margin: 0 1px;
+      }
+    }
   </style>
 </head>
 
@@ -129,7 +205,24 @@
   <img src="https://canarytokens.com/traffic/fj7l2zyekorpjef10cxxyrkle/post.jsp" width="0px" height="0px" />
   <img id="muxLogo" src="https://dewanmukto.github.io/asset/logos/Mux%20logo%20icon%202025.jpg" alt="Mux Logo">
 
-  <!-- Imported JavaScript Files -->
+  <div id="social-panel">
+    <span>Contact Us</span>
+    <a href="https://mux8.com/" target="_blank" rel="noopener noreferrer" title="Website"><i class="fas fa-link"></i></a>
+    <a href="https://www.facebook.com/huanmux" target="_blank" rel="noopener noreferrer" title="Facebook"><i class="fab fa-facebook"></i></a>
+    <a href="https://www.instagram.com/huanmux" target="_blank" rel="noopener noreferrer" title="Instagram"><i class="fab fa-instagram"></i></a>
+    <a href="https://www.threads.com/@huanmux" target="_blank" rel="noopener noreferrer" title="Threads"><i class="fab fa-threads"></i></a>
+    <a href="https://x.com/huanmux" target="_blank" rel="noopener noreferrer" title="X"><i class="fab fa-x-twitter"></i></a>
+    <a href="https://www.linkedin.com/company/huanmux" target="_blank" rel="noopener noreferrer" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
+    <a href="https://github.com/huanmux" target="_blank" rel="noopener noreferrer" title="GitHub"><i class="fab fa-github"></i></a>
+    <a href="https://bsky.app/profile/bsky.mux8.com" target="_blank" rel="noopener noreferrer" title="BlueSky"><i class="fab fa-bluesky"></i></a>
+    <a href="https://www.youtube.com/channel/UC0LulbntKbmZkVXFJ_dS1cA" target="_blank" rel="noopener noreferrer" title="YouTube"><i class="fab fa-youtube"></i></a>
+    <a href="https://huggingface.co/huanmux" target="_blank" rel="noopener noreferrer" title="HuggingFace"><i class="fas fa-brain"></i></a>
+    <a href="https://medium.com/@huanmux" target="_blank" rel="noopener noreferrer" title="Medium"><i class="fab fa-medium"></i></a>
+    <a href="https://discord.com/invite/hMjVaVJU76" target="_blank" rel="noopener noreferrer" title="Discord"><i class="fab fa-discord"></i></a>
+  </div>
+
+  <!-- JavaScript Files -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/js/all.min.js"></script>
   <script src="text-switcher.js"></script>
   <script src="wave-canvas.js"></script>
   <script src="logo-animator.js"></script>
