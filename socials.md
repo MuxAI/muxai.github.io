@@ -3,7 +3,7 @@
 
 # Contact Us
 
-Social platform accounts managed by **Huanmux 幻木心** staff:
+Social platform accounts managed by **Mux** staff:
 
 |Platform|Username/Link|
 |:---|:---|
@@ -16,6 +16,6 @@ Social platform accounts managed by **Huanmux 幻木心** staff:
 |<i class="fab fa-github"></i> GitHub|[@huanmux](https://github.com/huanmux)|
 |<i class="fab fa-bluesky"></i> BlueSky|[@bsky.mux8.com](https://bsky.app/profile/bsky.mux8.com)|
 |<i class="fab fa-youtube"></i> YouTube|[@huanmux](https://www.youtube.com/channel/UC0LulbntKbmZkVXFJ_dS1cA)|
-|<i class="fas fa-face-smiling-hands"></i> HuggingFace|[@huanmux](https://huggingface.co/huanmux)|
+|<i class="fas fa-brain"></i> HuggingFace|[@huanmux](https://huggingface.co/huanmux)|
 |<i class="fab fa-medium"></i> Medium|[@huanmux](https://medium.com/@huanmux)|
 |<i class="fab fa-discord"></i> Discord|[.gg/hMjVaVJU76](https://discord.com/invite/hMjVaVJU76)|
